@@ -1,0 +1,16 @@
+# Normalise line endings so Windows checkouts do not produce noisy diffs.
+* text=auto eol=lf
+*.png binary
+*.gpkg binary
+*.gz  binary
+
+# Keep GitHub's language statistics meaningful: the vendored map library and
+# the generated web data are not this project's source code.
+docs/vendor/**   linguist-vendored
+docs/data/*.geojson linguist-generated
+docs/data/summary.json linguist-generated
+data/*.csv       linguist-generated
+data/*.gpkg      linguist-generated
+
+# Treat the derived data as generated so it does not dominate diffs.
+docs/data/*.geojson -diff

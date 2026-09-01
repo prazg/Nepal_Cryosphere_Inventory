@@ -1,0 +1,58 @@
+cff-version: 1.2.0
+title: Nepal Cryosphere Inventory
+message: >-
+  If you use this inventory, please cite it and, separately, every upstream
+  dataset listed under references. This is a derived work.
+type: dataset
+authors:
+  - family-names: Ghimire
+    given-names: Prajwal
+    email: prajwal.1.ghimire@kcl.ac.uk
+    affiliation: King's College London
+repository-code: 'https://github.com/prazg/Nepal_Cryosphere_Inventory'
+url: 'https://prazg.github.io/Nepal_Cryosphere_Inventory/'
+abstract: >-
+  An open inventory of 4,480 glaciers (4,215 km2 of ice) and 1,429 glacial
+  lakes (81 km2) in Nepal, joining RGI 7.0 outlines, ITS_LIVE annual surface
+  velocity to 2025, two independent glacial lake inventories, and the HMAGLOFDB
+  record of outburst floods. Includes a lake-terminating flag for 201 glaciers,
+  which RGI 7.0 itself leaves unassigned for this region.
+keywords:
+  - glaciers
+  - glacial lakes
+  - GLOF
+  - Nepal
+  - Himalaya
+  - cryosphere
+license: CC-BY-4.0
+date-released: '2026-09-01'
+version: 1.0.0
+references:
+  - type: dataset
+    title: Randolph Glacier Inventory 7.0
+    authors: [{name: RGI Consortium}]
+    year: 2023
+    doi: 10.5067/f6jmovy5navz
+  - type: dataset
+    title: ITS_LIVE glacier surface velocity
+    authors: [{name: NASA MEaSUREs ITS_LIVE project}]
+  - type: dataset
+    title: >-
+      Inventory of Glacial Lakes in High Mountain Asia for the Periods
+      2016-2017 and 2022-2024
+    authors: [{family-names: Kumar, given-names: Ravindra},
+              {family-names: Vijay, given-names: Saurabh}]
+    year: 2026
+    doi: 10.5281/zenodo.17948783
+  - type: dataset
+    title: Annual 30 m dataset for glacial lakes in High Mountain Asia 2008-2017
+    authors: [{family-names: Chen, given-names: Fang}]
+    year: 2021
+    doi: 10.5194/essd-13-741-2021
+  - type: dataset
+    title: >-
+      A comprehensive and version-controlled database of glacial lake outburst
+      floods in High Mountain Asia
+    authors: [{family-names: Shrestha, given-names: Finu}]
+    year: 2023
+    doi: 10.5194/essd-15-3941-2023

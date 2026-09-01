@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nepal-cryosphere-inventory"
+version = "1.0.0"
+description = "Glacier and glacial lake inventory for Nepal from RGI 7.0, ITS_LIVE, Hi-MAG and HMAGLOFDB"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "CC-BY-4.0"}
+keywords = ["glaciers", "glacial lakes", "GLOF", "Nepal", "Himalaya", "cryosphere"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Topic :: Scientific/Engineering :: GIS",
+  "Intended Audience :: Science/Research",
+]
+dependencies = [
+  "geopandas>=1.0",
+  "pyogrio>=0.10",
+  "shapely>=2.0",
+  "pyproj>=3.6",
+  "pandas>=2.0",
+  "numpy>=1.26",
+  "requests>=2.31",
+  "rasterio>=1.4",
+  "xarray>=2024.1",
+  "zarr>=3.0",
+  "s3fs>=2024.1",
+  "dask[array]>=2024.1",
+  "pyarrow>=15.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/prazg/Nepal_Cryosphere_Inventory"
+Documentation = "https://prazg.github.io/Nepal_Cryosphere_Inventory/"
+
+[tool.setuptools]
+packages = ["nepal_glaciers"]
