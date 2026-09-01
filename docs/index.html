@@ -1,0 +1,648 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Nepal Cryosphere Inventory — glaciers, lakes and outburst floods</title>
+<meta name="description" content="An open inventory of 4,480 glaciers and 1,429 glacial lakes in Nepal, built from RGI 7.0, ITS_LIVE and HMAGLOFDB.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600&family=IBM+Plex+Sans:wght@400;450;600&display=swap" rel="stylesheet">
+<link href="vendor/leaflet/leaflet.css" rel="stylesheet">
+<style>
+:root{
+  --void:#0d1a20; --void-2:#132630; --ice:#4a8ba0; --ice-hi:#7fc0d4; --ice-pale:#a9c9d3;
+  --paper:#eceff0; --ink:#17262b; --melt:#c99230; --warn:#a5372c; --rule:#d3dadc; --rule-d:#283d46;
+  --panel:#0f1f26;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--paper);color:var(--ink);
+  font-family:"IBM Plex Sans",system-ui,-apple-system,sans-serif;font-size:16px;line-height:1.55}
+h1,h2,h3,.big,.mapttl{font-family:"Barlow Condensed",sans-serif;font-weight:600;margin:0}
+a{color:var(--ice)}
+.wrap{max-width:940px;margin:0 auto;padding:0 24px}
+
+/* ---------- header ---------- */
+header{background:var(--void);color:var(--paper);padding:48px 0 34px}
+header h1{font-size:clamp(36px,6vw,62px);line-height:.97;max-width:15ch}
+header p.sub{max-width:64ch;color:var(--ice-pale);margin:18px 0 0}
+.srcline{margin-top:24px;font-size:13.5px;color:#7e9aa4;border-top:1px solid var(--rule-d);padding-top:13px}
+.srcline a{color:var(--ice-pale)}
+
+/* ---------- map application ---------- */
+.app{background:var(--void);padding-bottom:40px}
+.appinner{max-width:1400px;margin:0 auto;padding:0 24px}
+.maprow{display:grid;grid-template-columns:290px 1fr;gap:0;
+  border:1px solid var(--rule-d);border-radius:2px;overflow:hidden;background:var(--panel)}
+#map{height:640px;min-height:420px}
+.side{background:var(--panel);color:var(--ice-pale);padding:20px 18px;overflow-y:auto;height:640px;
+  border-right:1px solid var(--rule-d);font-size:14px}
+.side h3{font-size:19px;color:var(--paper);margin:0 0 4px}
+.side .grp{margin:0 0 20px;padding:0 0 18px;border-bottom:1px solid var(--rule-d)}
+.side .grp:last-child{border-bottom:0}
+.side label{display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer;line-height:1.35}
+.side input[type=checkbox]{accent-color:var(--ice);width:15px;height:15px;flex:none}
+.side input[type=range]{width:100%;accent-color:var(--ice);margin:8px 0 2px}
+.rl{display:flex;justify-content:space-between;font-size:12.5px;color:#7e9aa4;margin-bottom:2px}
+.cap{font-size:12.5px;color:#7e9aa4;margin:6px 0 0}
+.swm{width:12px;height:12px;border-radius:2px;flex:none;display:inline-block}
+.dot{width:11px;height:11px;border-radius:50%;flex:none;display:inline-block}
+button.rst{background:none;border:1px solid var(--rule-d);color:var(--ice-pale);
+  font:inherit;font-size:13px;padding:6px 12px;border-radius:2px;cursor:pointer;width:100%}
+button.rst:hover{border-color:var(--ice);color:var(--paper)}
+.counts{color:var(--paper);font-size:13.5px;line-height:1.7}
+.counts b{font-family:"Barlow Condensed";font-size:21px;font-weight:600}
+.basemap{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.basemap button{flex:1;min-width:64px;background:none;border:1px solid var(--rule-d);color:var(--ice-pale);
+  font:inherit;font-size:12.5px;padding:5px 4px;border-radius:2px;cursor:pointer}
+.basemap button[aria-pressed=true]{border-color:var(--ice);color:var(--paper);background:#16303b}
+/* map overlays */
+.maprel{position:relative}
+#info{position:absolute;right:14px;top:14px;width:266px;max-height:calc(100% - 28px);overflow-y:auto;
+  background:rgba(13,26,32,.94);color:var(--ice-pale);border:1px solid var(--rule-d);
+  padding:15px 16px;font-size:13.5px;display:none;border-radius:2px}
+#info h4{font-family:"Barlow Condensed";font-size:20px;color:var(--paper);margin:0 0 8px;font-weight:600}
+#info dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:3px 12px}
+#info dt{color:#7e9aa4}
+#info dd{margin:0;color:var(--paper);text-align:right;font-variant-numeric:tabular-nums}
+#info .close{position:absolute;right:10px;top:8px;cursor:pointer;color:#7e9aa4;font-size:19px;line-height:1;
+  background:none;border:0;padding:2px 5px}
+#info .note{margin-top:10px;padding-top:9px;border-top:1px solid var(--rule-d);color:#7e9aa4;font-size:12.5px}
+.mapfail{padding:38px 34px;color:var(--ice-pale);max-width:52ch;font-size:14.5px}
+.mapfail h4{font-family:"Barlow Condensed";font-size:24px;color:var(--paper);margin:0 0 10px;font-weight:600}
+.mapfail code{background:#1b3540;color:var(--ice-hi);padding:1px 5px;border-radius:3px}
+#map{background:var(--panel)}
+.hint{position:absolute;left:14px;bottom:26px;background:rgba(13,26,32,.9);color:#9db6be;
+  border:1px solid var(--rule-d);padding:6px 11px;font-size:12.5px;border-radius:2px}
+@media(max-width:900px){
+  .maprow{grid-template-columns:1fr}
+  .side{height:auto;max-height:none;border-right:0;border-bottom:1px solid var(--rule-d)}
+  #map{height:470px}
+  #info{position:static;width:auto;margin:12px 0 0;max-height:none}
+}
+
+/* ---------- content sections ---------- */
+section{padding:46px 0;border-bottom:1px solid var(--rule)}
+h2{font-size:31px;margin-bottom:6px}
+h3{font-size:21px}
+.lede{max-width:66ch;margin:0 0 24px;color:#3d5058}
+.chart{width:100%;height:auto;display:block;margin:10px 0 4px}
+.ax{font:11px "IBM Plex Sans";fill:#6d8189}
+.axl{font:13px "IBM Plex Sans";fill:#17262b}
+.stats{display:flex;flex-wrap:wrap;gap:34px;margin:0 0 26px;padding:0;list-style:none}
+.stats li{min-width:116px}
+.big{font-size:40px;line-height:1;display:block;font-variant-numeric:tabular-nums}
+.stats .lab{font-size:13px;color:#5c7079}
+table{width:100%;border-collapse:collapse;font-size:15px;font-variant-numeric:tabular-nums}
+th{text-align:left;font-weight:600;font-size:13px;color:#5c7079;padding:0 10px 7px 0;border-bottom:1.5px solid var(--ink)}
+td{padding:7px 10px 7px 0;border-bottom:1px solid var(--rule)}
+td.n,th.n{text-align:right}
+.sub2{color:#8598a0;font-size:12.5px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:38px}
+@media(max-width:760px){.grid{grid-template-columns:1fr}}
+.flag{background:#fbf3ef;border-left:4px solid var(--warn);padding:20px 22px;margin:22px 0}
+.flag h3{color:var(--warn)}
+.key{font-size:13.5px;color:#5c7079;margin:10px 0 0}
+.sw{display:inline-block;width:11px;height:11px;border-radius:50%;vertical-align:-1px;margin-right:5px}
+code{font-size:13px;background:#e0e6e7;padding:1px 5px;border-radius:3px}
+.dl{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0 0}
+.dl a{display:inline-block;border:1px solid var(--ice);color:var(--ice);text-decoration:none;
+  padding:8px 14px;font-size:14px;border-radius:2px}
+.dl a:hover{background:var(--ice);color:#fff}
+footer{padding:38px 0 64px;font-size:14px;color:#5c7079}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<header><div class="wrap">
+  <h1>Nepal cryosphere inventory</h1>
+  <p class="sub">Every mapped glacier and glacial lake in Nepal, joined into one dataset: 4,480 glaciers holding 4,215 km&sup2; of ice, 1,429 lakes covering 81 km&sup2;, annual ice speed to 2025, and every recorded outburst flood. Open data, open pipeline, and explicit about what it cannot tell you.</p>
+  <p class="srcline">Glacier outlines <a href="https://nsidc.org/data/nsidc-0770/versions/7">RGI 7.0</a> &middot; Ice velocity <a href="https://nsidc.org/apps/itslive/">ITS_LIVE</a> &middot; Lakes <a href="https://doi.org/10.5281/zenodo.17948783">Kumar &amp; Vijay 2026</a> and <a href="https://zenodo.org/record/4275164">Hi-MAG</a> &middot; Floods HMAGLOFDB v4 &middot; Built 1 September 2026</p>
+</div></header>
+
+<div class="app"><div class="appinner">
+<div class="maprow">
+  <div class="side">
+    <div class="grp">
+      <h3>Showing</h3>
+      <p class="counts" id="counts">&hellip;</p>
+    </div>
+
+    <div class="grp">
+      <h3>Layers</h3>
+      <label><input type="checkbox" id="lyrG" checked><span class="swm" style="background:#4a8ba0"></span> Glaciers</label>
+      <label><input type="checkbox" id="lyrL" checked><span class="swm" style="background:#2f6f8f"></span> Glacial lakes</label>
+      <label><input type="checkbox" id="lyrF" checked><span class="dot" style="background:#c99230"></span> Recorded outburst floods</label>
+    </div>
+
+    <div class="grp">
+      <h3>Colour glaciers by</h3>
+      <label><input type="radio" name="gcol" value="v" checked> Surface speed, 2016&ndash;2024</label>
+      <label><input type="radio" name="gcol" value="lake"> Has a lake at its margin</label>
+      <label><input type="radio" name="gcol" value="size"> Area</label>
+      <p class="cap" id="gLegend"></p>
+    </div>
+
+    <div class="grp">
+      <h3>Glacier filters</h3>
+      <div class="rl"><span>Minimum area</span><span id="gaLab">0 km&sup2;</span></div>
+      <input type="range" id="gArea" min="0" max="50" step="0.5" value="0">
+      <label><input type="checkbox" id="gNepal" checked> Only glaciers centred in Nepal</label>
+      <label><input type="checkbox" id="gLakeOnly"> Only glaciers with a margin lake</label>
+      <label><input type="checkbox" id="gVok"> Only where speed is measurable</label>
+    </div>
+
+    <div class="grp">
+      <h3>Lake filters</h3>
+      <div class="rl"><span>Minimum area</span><span id="laLab">0 km&sup2;</span></div>
+      <input type="range" id="lArea" min="0" max="2" step="0.01" value="0">
+      <label><input type="checkbox" id="lPro" checked> Proglacial &amp; ice-marginal</label>
+      <label><input type="checkbox" id="lSupra" checked> Supraglacial</label>
+      <label><input type="checkbox" id="lUnc" checked> Unconnected</label>
+      <label><input type="checkbox" id="lUnm" checked> Not matched to Hi-MAG</label>
+      <label><input type="checkbox" id="lExp"> Only lakes that expanded</label>
+      <p class="cap">Lake fill shows area change 2016&ndash;17 &rarr; 2022&ndash;24:
+        <span class="dot" style="background:#2c7a4b"></span> expanding
+        <span class="dot" style="background:#3d6b80"></span> stable
+        <span class="dot" style="background:#a5372c"></span> shrinking
+        <span class="dot" style="background:#5c7079"></span> not assessed</p>
+    </div>
+
+    <div class="grp">
+      <h3>Basemap</h3>
+      <div class="basemap" id="bm">
+        <button data-b="relief" aria-pressed="true">Relief</button>
+        <button data-b="topo" aria-pressed="false">Topo</button>
+        <button data-b="sat" aria-pressed="false">Satellite</button>
+      </div>
+    </div>
+
+    <div class="grp"><button class="rst" id="reset">Reset all filters</button></div>
+  </div>
+
+  <div class="maprel">
+    <div id="map"></div>
+    <div id="info"><button class="close" id="infoClose" aria-label="Close">&times;</button><div id="infoBody"></div></div>
+    <div class="hint" id="hint">Click a glacier or lake for detail</div>
+  </div>
+</div>
+</div></div>
+
+<section><div class="wrap">
+  <h2>The two inventories, side by side</h2>
+  <p class="lede">Ice and water occupy different elevations. Glacier area peaks between 5,000 and 6,200 m; lakes cluster about a thousand metres lower, on and beyond the debris-covered tongues. The gap between the two curves is where outburst floods start.</p>
+  <div id="cHyps"></div>
+  <p class="key"><span class="sw" style="background:#4a8ba0"></span>glacier area per 50 m band &nbsp; <span class="sw" style="background:#c99230"></span>lake area per 100 m band (scaled &times;20 for visibility)</p>
+</div></section>
+
+<section><div class="wrap">
+  <h2>Lakes touching ice are the ones growing</h2>
+  <p class="lede">Share of lakes that expanded between 2016&ndash;17 and 2022&ndash;24, grouped by distance to the nearest mapped glacier. Lakes at the ice margin expand around three times as often as detached ones, and the gradient is monotonic. Across all assessable lakes the net area gain is <b id="netpct"></b>, close to the 5.5% the source study reports for High Mountain Asia as a whole.</p>
+  <div id="cContact"></div>
+  <p class="key">Expansion means a gain above both 0.005 km&sup2; and the source study's own area uncertainty. Lakes under 0.01 km&sup2;, or with fewer than three cloud-free images in either period, are not assessed.</p>
+</div></section>
+
+<section><div class="wrap">
+  <h2>Twenty-three years of retreat, made visible</h2>
+  <div class="flag">
+    <h3><span id="insideN"></span> lakes now lie inside outlines that RGI still maps as ice</h3>
+    <p>RGI 7.0's Nepal outlines come from imagery with a median date of 1999. The lakes are from 2022. So <span id="insideN2"></span> lakes &mdash; <span id="insideA"></span> km&sup2; of open water across 163 glaciers &mdash; fall <em>inside</em> polygons the glacier inventory still calls glacier. Hi-MAG independently classifies 98 of them as proglacial and only 16 as supraglacial, so these are overwhelmingly not ponds on the ice surface. They are lakes filling ground the terminus has vacated.</p>
+    <p>This cuts both ways. It is a real, measurable retreat signal. It also means every ice-contact judgement in this inventory is made against a 1999 margin and will <strong>overstate</strong> contact for glaciers that have since pulled back. The field is named <code>dist_to_rgi1999_m</code> so the gap cannot be forgotten downstream.</p>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <h2>What this data cannot tell you</h2>
+  <div class="flag">
+    <h3>There is no usable ice-velocity trend here</h3>
+    <p>Comparing glacier speed in 2000&ndash;2009 against 2016&ndash;2024 gives a median slowdown of about 46%, with 96% of glaciers apparently slowing. It is an artefact and should not be published.</p>
+    <p>Speed is the hypotenuse of two velocity components, so it cannot go below zero and random error pushes it <em>upward</em>. Early years rest on a handful of satellite image pairs; recent years rest on thousands. As the error collapsed, apparent speed fell with it. Median signal-to-noise across Nepal is <b id="snrE"></b> in the 2000s against <b id="snrL"></b> today &mdash; the older velocities sit at the noise floor.</p>
+    <p>Filtering for high early signal-to-noise makes it worse, not better: it selects the glaciers noise happened to inflate, so regression to the mean reproduces the same slowdown. <code>velocity_change_interpretable</code> is set to false for every glacier.</p>
+  </div>
+  <div id="cDiag"></div>
+  <p class="key"><span class="sw" style="background:#4a8ba0"></span>median image pairs per year (log scale) &nbsp; <span class="sw" style="background:#a5372c"></span>median velocity error, m/yr &nbsp;&mdash; shaded band is the epoch used for current speed</p>
+  <p class="key">This is a statement about this dataset processed this way, not about Himalayan glaciers. Published work on High Mountain Asia velocity trends has not been verified here; check it independently.</p>
+</div></section>
+
+<section><div class="wrap">
+  <h2>Do lakes make their glaciers flow faster?</h2>
+  <p class="lede">Elsewhere, lake-terminating glaciers often flow faster than land-terminating ones. This data does not show that for Nepal. Raw medians suggest contact-lake glaciers are faster &mdash; 2.11 against 1.81 m/yr &mdash; but that reverses once you compare like with like, because glaciers with lakes are systematically larger.</p>
+  <table><thead><tr><th>Glacier size, km&sup2;</th><th class="n">Median m/yr with margin lake</th><th class="n">Median m/yr without</th></tr></thead><tbody id="tSpd"></tbody></table>
+  <p class="key">Read this as an absence of evidence, not evidence of absence: samples are small, Nepal's glaciers are slow and heavily debris-covered, and a glacier-wide mean speed is a blunt instrument for a terminus process.</p>
+</div></section>
+
+<section><div class="wrap">
+  <h2>By province</h2>
+  <table><thead><tr><th>Province</th><th class="n">Glaciers</th><th class="n">Ice km&sup2;</th><th class="n">Lakes</th><th class="n">Lake km&sup2;</th><th class="n">Floods</th></tr></thead><tbody id="tProv"></tbody></table>
+  <p class="key">Assigned from the representative point of each glacier and the centroid of each lake. Recorded floods are HMAGLOFDB v4 events matched to a lake within 3 km.</p>
+</div></section>
+
+<section><div class="wrap">
+  <h2>Read this before using the data</h2>
+  <div class="grid">
+    <div>
+      <h3>Outlines are two decades old</h3>
+      <p class="key">RGI 7.0 source imagery for Nepal spans 1992&ndash;2010, median 1999. Sampling 2024 velocity inside a 1999 outline includes ground that has since deglaciated, biasing glacier-wide means low. The inventory is not a current map of ice extent.</p>
+      <h3 style="margin-top:22px">Two definitions of &ldquo;in Nepal&rdquo;</h3>
+      <p class="key">4,679 glaciers intersect the border; 4,480 have their representative point inside it. Headline figures use the second. The first pulls in Tibetan glaciers such as Rongbuk that are under 2% inside Nepal. Both are in the files, with <code>frac_within_nepal</code>.</p>
+      <h3 style="margin-top:22px">The border itself is contested</h3>
+      <p class="key">The Kalapani&ndash;Limpiyadhura area in the northwest is disputed between Nepal and India. This build follows the geoBoundaries gbOpen ADM0 line; a different boundary changes far-western counts.</p>
+    </div>
+    <div>
+      <h3>This is not a hazard ranking</h3>
+      <p class="key">There is no danger score, deliberately. Judging whether a lake is likely to burst needs moraine dam geometry, freeboard, ice content in the dam, slope stability above the lake, and downstream exposure. None of that is in these sources. The inventory supplies the objective ingredients and stops. A composite index built only from area, growth and ice contact would look authoritative and mean very little.</p>
+      <h3 style="margin-top:22px">Small lakes are under-counted</h3>
+      <p class="key">The lake source reports detection near 96% for lakes of 20,000&ndash;100,000 m&sup2; and 100% above that, but roughly 25% below 5,400 m&sup2;. Small lakes have caused destructive floods, so do not read the count of tiny lakes as complete.</p>
+      <h3 style="margin-top:22px">RGI cannot identify lake-terminating glaciers</h3>
+      <p class="key">Every glacier in RGI region 15 carries <code>term_type = 9</code>, unassigned. That gap is why the lake inventory exists: matching lakes back to outlines supplies the flag RGI does not.</p>
+    </div>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <h2>Get the data</h2>
+  <p class="lede">Everything is CC-BY-4.0 and rebuildable from source with the pipeline in this repository. The map above uses simplified geometry for speed; the files below are full resolution.</p>
+  <div class="dl">
+    <a href="data/glaciers.geojson" download>glaciers.geojson (simplified)</a>
+    <a href="data/lakes.geojson" download>lakes.geojson (simplified)</a>
+    <a href="data/glof.geojson" download>glof.geojson</a>
+    <a href="data/summary.json" download>summary.json</a>
+  </div>
+  <p class="key">Full-resolution GeoPackages, the annual velocity and lake-area series, and the data dictionaries are in the <code>data/</code> directory of the repository.</p>
+</div></section>
+
+<footer><div class="wrap">
+  <p>Built from RGI Consortium (2023) NSIDC-0770; ITS_LIVE (NASA MEaSUREs); Kumar &amp; Vijay (2026) Zenodo 17948783; Chen et al. (2021) Zenodo 4275164; Shrestha et al. (2023) HMAGLOFDB; geoBoundaries gbOpen. None of these endorses this build. Basemaps &copy; Esri and contributors, &copy; OpenTopoMap and OpenStreetMap contributors.</p>
+</div></footer>
+
+<!-- Headline figures and chart series. Loaded as a script rather than fetched,
+     so the page still works where relative fetch is blocked (file:// URLs and
+     some sandboxed previews). Regenerated by nepal_glaciers/step5_web.py. -->
+<script src="data/summary.js"></script>
+<script src="vendor/leaflet/leaflet.js"></script>
+<script>
+/* Leaflet is vendored here, so the map needs no CDN and — unlike WebGL map
+   libraries — no Web Worker, which means it also runs inside sandboxed
+   previews that forbid blob-URL workers. CDN fallback only if the local copy
+   is missing. If every source fails the page still renders without the map. */
+if (typeof L === 'undefined') {
+  var FALLBACKS = ['https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
+                   'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js'];
+  for (var i = 0; i < FALLBACKS.length && typeof L === 'undefined'; i++) {
+    try {
+      var rq = new XMLHttpRequest();
+      rq.open('GET', FALLBACKS[i], false);
+      rq.send(null);
+      if (rq.status === 200) { (0, eval)(rq.responseText); }
+    } catch (e) { /* blocked or offline; try the next */ }
+  }
+}
+</script>
+<script>
+const NA = '\u2014';
+
+/* Basemaps. All three are third-party raster services with their own usage
+   policies and no service guarantee to this project. Swap them here. */
+const BASES = {
+  relief:{url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Shaded_Relief/MapServer/tile/{z}/{y}/{x}',
+          attr:'Tiles &copy; Esri, USGS, NOAA'},
+  topo:  {url:'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+          attr:'&copy; OpenTopoMap, &copy; OpenStreetMap contributors'},
+  sat:   {url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+          attr:'Tiles &copy; Esri, Maxar, Earthstar Geographics'}
+};
+const CHANGE = {expanding:'#2c7a4b', stable:'#3d6b80', shrinking:'#a5372c', 'not assessed':'#5c7079'};
+const HIDDEN = {opacity:0, fillOpacity:0};
+
+const MAP_OK = (typeof L !== 'undefined');
+let map=null, baseLayer=null, gLayer=null, lLayer=null, fLayer=null, canvas=null;
+let DATA={}, gCol='v', selG='', selL='';
+
+const $ = id => document.getElementById(id);
+
+function mapUnavailable(){
+  $('map').innerHTML='<div class="mapfail"><h4>The map could not start</h4>'+
+    '<p>The Leaflet library did not load. That usually means this page is being viewed '+
+    'inside a sandbox that blocks scripts, or <code>vendor/leaflet/</code> is missing '+
+    'from this copy of the repository.</p>'+
+    '<p>Everything below still works \u2014 the charts, tables and figures do not need the map. '+
+    'To get the map, serve the folder over HTTP: <code>cd docs &amp;&amp; python -m http.server 8000</code>, '+
+    'then open <code>http://localhost:8000</code>.</p></div>';
+  $('hint').style.display='none';
+  const side=document.querySelector('.side'); if(side) side.style.opacity='.45';
+}
+
+if (MAP_OK) {
+  // Canvas renderer: a few thousand polygons are far too many for SVG.
+  canvas = L.canvas({padding:0.3});
+  map = L.map('map', {renderer:canvas, center:[28.5,84.2], zoom:7,
+                      minZoom:6, maxZoom:14, preferCanvas:true, worldCopyJump:false});
+  setBase('relief');
+} else {
+  mapUnavailable();
+}
+
+function setBase(b){
+  if(baseLayer) map.removeLayer(baseLayer);
+  baseLayer = L.tileLayer(BASES[b].url, {attribution:BASES[b].attr, maxZoom:14,
+                                         subdomains:'abc', crossOrigin:true});
+  baseLayer.addTo(map);
+  if(baseLayer.bringToBack) baseLayer.bringToBack();
+}
+
+/* ---- styling ---- */
+function rampV(v,ok){
+  if(!ok) return '#6b7d84';
+  const s=[[0,'#cfe3ea'],[2,'#8fbccc'],[5,'#4a8ba0'],[12,'#2b6076'],[25,'#16323f']];
+  for(let i=s.length-1;i>=0;i--) if(v>=s[i][0]) return s[i][1];
+  return s[0][1];
+}
+function rampA(a){
+  const s=[[0,'#d6e6ec'],[1,'#93c0cf'],[5,'#5494aa'],[20,'#2b6076'],[60,'#16323f']];
+  for(let i=s.length-1;i>=0;i--) if(a>=s[i][0]) return s[i][1];
+  return s[0][1];
+}
+function styleG(p){
+  const c = gCol==='v'    ? rampV(p.v, p.vok===1)
+          : gCol==='lake' ? (p.lake===1?'#c99230':'#5f8a99')
+          :                 rampA(p.g_km2);
+  const sel = p.rgi_id===selG;
+  return {color: sel?'#ffffff':'#0d1a20', weight: sel?2.2:0.4, opacity: sel?1:0.55,
+          fillColor:c, fillOpacity:0.72};
+}
+function styleL(p){
+  const c = CHANGE[p.cls] || CHANGE['not assessed'];
+  const sel = p.lake_id===selL;
+  return {color: sel?'#ffffff':c, weight: sel?2.2:0.7, opacity:1, fillColor:c, fillOpacity:0.95};
+}
+
+/* ---- visibility tests: the single source of truth for both map and counts ---- */
+function lakeTypes(){
+  const t=[];
+  if($('lPro').checked) t.push('proglacial lake','ice-marginal lake');
+  if($('lSupra').checked) t.push('supraglacial lake');
+  if($('lUnc').checked) t.push('unconnected glacial lake');
+  if($('lUnm').checked) t.push('unmatched');
+  return t;
+}
+function gVisible(p){
+  return p.g_km2 >= parseFloat($('gArea').value)
+      && (!$('gNepal').checked    || p.npl===1)
+      && (!$('gLakeOnly').checked || p.lake===1)
+      && (!$('gVok').checked      || p.vok===1);
+}
+function lVisible(p, types){
+  return p.l_km2 >= parseFloat($('lArea').value)
+      && types.includes(p.typ)
+      && (!$('lExp').checked || p.cls==='expanding');
+}
+
+function addLayers(){
+  if(!MAP_OK) return;
+  gLayer = L.geoJSON(DATA.glaciers, {renderer:canvas,
+    style:f=>styleG(f.properties),
+    onEachFeature:(f,l)=>l.on('click',e=>{
+      if(l._hidden) return;
+      L.DomEvent.stopPropagation(e); showGlacier(f.properties);})}).addTo(map);
+
+  lLayer = L.geoJSON(DATA.lakes, {renderer:canvas,
+    style:f=>styleL(f.properties),
+    onEachFeature:(f,l)=>l.on('click',e=>{
+      if(l._hidden) return;
+      L.DomEvent.stopPropagation(e); showLake(f.properties);})}).addTo(map);
+
+  fLayer = L.geoJSON(DATA.glof, {renderer:canvas,
+    pointToLayer:(f,ll)=>L.circleMarker(ll,{radius:5,color:'#3a2a08',weight:1.1,
+      fillColor:'#c99230',fillOpacity:0.95}),
+    onEachFeature:(f,l)=>l.on('click',e=>{
+      L.DomEvent.stopPropagation(e); showFlood(f.properties);})}).addTo(map);
+
+  map.fitBounds(gLayer.getBounds(), {padding:[12,12]});
+  applyFilters();
+}
+
+function applyFilters(){
+  updateCounts();
+  $('gaLab').textContent = parseFloat($('gArea').value)+' km\u00b2';
+  $('laLab').textContent = parseFloat($('lArea').value).toFixed(2)+' km\u00b2';
+  if(!MAP_OK || !gLayer) return;
+  const types=lakeTypes(), gOn=$('lyrG').checked, lOn=$('lyrL').checked;
+
+  // Restyle in place rather than rebuilding: re-parsing 4,679 polygons on every
+  // slider tick would make the controls feel broken.
+  gLayer.eachLayer(l=>{
+    const vis = gOn && gVisible(l.feature.properties);
+    l._hidden = !vis;
+    l.setStyle(vis ? styleG(l.feature.properties) : HIDDEN);
+  });
+  lLayer.eachLayer(l=>{
+    const vis = lOn && lVisible(l.feature.properties, types);
+    l._hidden = !vis;
+    l.setStyle(vis ? styleL(l.feature.properties) : HIDDEN);
+  });
+  if($('lyrF').checked){ if(!map.hasLayer(fLayer)) fLayer.addTo(map); }
+  else if(map.hasLayer(fLayer)) map.removeLayer(fLayer);
+}
+
+// Counts come from the same tests the map uses, so the sidebar can never
+// disagree with what is drawn - and they still work with no map at all.
+function updateCounts(){
+  if(!DATA.glaciers) return;
+  const gOn=$('lyrG').checked, lOn=$('lyrL').checked, fOn=$('lyrF').checked;
+  const types=lakeTypes();
+  let gn=0, ga=0;
+  for(const f of DATA.glaciers.features){ const p=f.properties;
+    if(gVisible(p)){ gn++; ga+=p.g_np; } }
+  let ln=0, la=0;
+  for(const f of DATA.lakes.features){ const p=f.properties;
+    if(lVisible(p,types)){ ln++; la+=p.l_km2; } }
+  $('counts').innerHTML =
+    (gOn?`<b>${gn.toLocaleString()}</b> glaciers &middot; ${ga.toFixed(0)} km&sup2;<br>`:'')+
+    (lOn?`<b>${ln.toLocaleString()}</b> lakes &middot; ${la.toFixed(1)} km&sup2;<br>`:'')+
+    (fOn?`<b>${DATA.glof.features.length}</b> recorded floods`:'');
+}
+
+/* ---- detail panel: needs no map ---- */
+function row(k,v){return `<dt>${k}</dt><dd>${v}</dd>`;}
+function panel(title, rows, note){
+  $('infoBody').innerHTML = `<h4>${title}</h4><dl>${rows}</dl>`+(note?`<div class="note">${note}</div>`:'');
+  $('info').style.display='block'; $('hint').style.display='none';
+}
+function hl(rgi, lake){
+  selG=rgi||''; selL=lake||'';
+  if(!MAP_OK || !gLayer) return;
+  gLayer.eachLayer(l=>{ if(!l._hidden) l.setStyle(styleG(l.feature.properties)); });
+  lLayer.eachLayer(l=>{ if(!l._hidden) l.setStyle(styleL(l.feature.properties)); });
+}
+function showGlacier(p){
+  hl(p.rgi_id,'');
+  panel(p.nm && p.nm!=='' ? p.nm : 'Unnamed glacier',
+    row('RGI id',`<span style="font-size:11.5px">${p.rgi_id}</span>`)+
+    row('Area',`${p.g_km2} km\u00b2`)+
+    (p.g_np<p.g_km2*0.99?row('Inside Nepal',`${p.g_np} km\u00b2`):'')+
+    row('Elevation',`${p.zmin}\u2013${p.zmax} m`)+
+    row('Speed 2016\u201324', p.vok===1?`${p.v} m/yr`:`${p.v??NA} <span style="color:#7e9aa4">(low S:N)</span>`)+
+    row('Margin lakes', p.nlk>0?p.nlk:'none found')+
+    row('Recorded floods', p.glof>0?p.glof:NA)+
+    row('Province', p.prov||NA)+
+    row('Outline year', p.yr||NA),
+    'Outline dates from RGI 7.0 source imagery, not today. Speed is a glacier-wide mean.');
+}
+function showLake(p){
+  hl(p.rgi||'', p.lake_id);
+  panel('Glacial lake',
+    row('Area 2022',`${p.l_km2} km\u00b2`)+
+    row('Elevation',`${p.z} m`)+
+    row('Type', p.typ==='unmatched'?'<span style="color:#7e9aa4">not matched</span>':p.typ)+
+    row('Change 16\u201317\u219222\u201324', p.cls==='not assessed'?NA:`${p.chg>0?'+':''}${p.chg}% <span style="color:#7e9aa4">(${p.cls})</span>`)+
+    row('Distance to 1999 ice', p.d===0?'in contact':`${p.d.toLocaleString()} m`)+
+    row('Nearest glacier', p.gnm||'unnamed')+
+    row('Recorded floods', p.glof>0?p.glof:NA)+
+    row('Province', p.prov||NA),
+    'Distance is measured to a glacier margin mapped around 1999, so contact is likely overstated for retreating glaciers.');
+}
+function showFlood(p){
+  hl('','');
+  panel('Recorded outburst flood',
+    row('Lake', p.nm||'unknown')+row('Year', p.yr??NA)+
+    row('Dam type', p.typ||NA)+row('Basin', p.basin||NA),
+    'From HMAGLOFDB v4. Coordinates vary in precision; verify individual events against the source.');
+}
+$('infoClose').onclick=()=>{
+  $('info').style.display='none';
+  if(MAP_OK) $('hint').style.display='';
+  hl('','');
+};
+
+const LEGENDS={
+  v:'Pale to dark: 0 to 25+ m/yr. Grey means the speed does not clear the quality filter.',
+  lake:'Amber: a lake sits at the mapped margin. Blue: none found.',
+  size:'Pale to dark: under 1 km\u00b2 up to 60+ km\u00b2.'
+};
+// Range sliders fire continuously while dragged. Restyling ~6,100 canvas paths
+// on every event makes the controls feel stuck, so coalesce to one pass per frame.
+let pending=false;
+function scheduleFilters(){
+  if(pending) return;
+  pending=true;
+  requestAnimationFrame(()=>{ pending=false; applyFilters(); });
+}
+['lyrG','lyrL','lyrF','gArea','gNepal','gLakeOnly','gVok','lArea','lPro','lSupra','lUnc','lUnm','lExp']
+  .forEach(id=>$(id).addEventListener('input',scheduleFilters));
+document.querySelectorAll('input[name=gcol]').forEach(r=>r.addEventListener('change',e=>{
+  gCol=e.target.value; $('gLegend').textContent=LEGENDS[gCol];
+  if(MAP_OK && gLayer) gLayer.eachLayer(l=>{ if(!l._hidden) l.setStyle(styleG(l.feature.properties)); });
+}));
+$('reset').onclick=()=>{
+  ['lyrG','lyrL','lyrF','gNepal','lPro','lSupra','lUnc','lUnm'].forEach(i=>$(i).checked=true);
+  ['gLakeOnly','gVok','lExp'].forEach(i=>$(i).checked=false);
+  $('gArea').value=0; $('lArea').value=0;
+  document.querySelector('input[name=gcol][value=v]').checked=true;
+  gCol='v'; $('gLegend').textContent=LEGENDS.v;
+  applyFilters();
+};
+$('bm').addEventListener('click',e=>{
+  const b=e.target.dataset.b; if(!b||!MAP_OK) return;
+  [...$('bm').children].forEach(x=>x.setAttribute('aria-pressed', String(x.dataset.b===b)));
+  setBase(b);
+});
+
+/* ---------------- charts ---------------- */
+const SVG=(vb,inner,label)=>`<svg viewBox="0 0 ${vb}" class="chart" role="img" aria-label="${label}">${inner}</svg>`;
+function drawHyps(g,l){
+  const W=880,H=430,L=64,amax=Math.max(...g.map(d=>d.a)),lmax=Math.max(...l.map(d=>d.a))*20;
+  const scale=Math.max(amax,lmax), z0=2400,z1=8600, o=[];
+  const y=z=>H-(z-z0)/(z1-z0)*(H-22)-12;
+  for(let z=3000;z<=8500;z+=1000)
+    o.push(`<line x1="${L}" y1="${y(z)}" x2="${W-10}" y2="${y(z)}" stroke="#d3dadc"/><text x="${L-8}" y="${y(z)+4}" text-anchor="end" class="ax">${z.toLocaleString()}</text>`);
+  l.forEach(d=>{const w=d.a*20/scale*(W-L-18);
+    o.push(`<rect x="${L}" y="${y(d.z)-3}" width="${w.toFixed(1)}" height="6.5" fill="#c99230" opacity=".8"><title>${d.z}\u2013${d.z+100} m: ${d.a} km\u00b2 of lake, ${d.n} lakes</title></rect>`);});
+  g.forEach(d=>{const w=d.a/scale*(W-L-18);
+    o.push(`<rect x="${L}" y="${y(d.z)-1.6}" width="${w.toFixed(1)}" height="3.2" fill="#4a8ba0" opacity="${(0.35+0.65*Math.pow(d.a/amax,0.45)).toFixed(2)}"><title>${d.z} m: ${d.a} km\u00b2 of ice</title></rect>`);});
+  $('cHyps').innerHTML=SVG(`0 0 ${W} ${H}`.slice(4),o.join(''),'Glacier and lake area by elevation');
+}
+function drawContact(rows){
+  const W=880,H=200,L=160,mx=Math.max(...rows.map(r=>r.e)),o=[];
+  rows.forEach((r,i)=>{const y=16+i*44,w=r.e/mx*(W-L-110);
+    o.push(`<text x="${L-10}" y="${y+18}" text-anchor="end" class="axl">${r.l}</text>`);
+    o.push(`<rect x="${L}" y="${y}" width="${w.toFixed(1)}" height="26" fill="#c99230" opacity="${(0.35+0.65*r.e/mx).toFixed(2)}"/>`);
+    o.push(`<text x="${L+w+10}" y="${y+18}" class="axl">${r.e}% <tspan fill="#7c8f97">n=${r.n}</tspan></text>`);});
+  $('cContact').innerHTML=SVG(`${W} ${H}`,o.join(''),'Share of lakes expanding by distance to ice');
+}
+function drawDiag(d){
+  const W=880,H=300,L=58,B=40,o=[];
+  const y0=d[0].y,y1=d[d.length-1].y, X=y=>L+(y-y0)/(y1-y0)*(W-L-16);
+  const pmax=Math.log10(Math.max(...d.map(x=>x.p))+1), emax=Math.max(...d.map(x=>x.e));
+  o.push(`<rect x="${X(2016)}" y="16" width="${X(2024)-X(2016)}" height="${H-B-16}" fill="#4a8ba0" opacity=".08"/>`);
+  [1990,2000,2010,2020].forEach(v=>o.push(`<line x1="${X(v)}" y1="16" x2="${X(v)}" y2="${H-B}" stroke="#d3dadc"/><text x="${X(v)}" y="${H-B+18}" text-anchor="middle" class="ax">${v}</text>`));
+  const P=d.map(x=>`${X(x.y).toFixed(1)},${(H-B-Math.log10(x.p+1)/pmax*(H-B-20)).toFixed(1)}`).join(' ');
+  const E=d.map(x=>`${X(x.y).toFixed(1)},${(H-B-(x.e/emax)*(H-B-20)).toFixed(1)}`).join(' ');
+  o.push(`<polyline points="${P}" fill="none" stroke="#4a8ba0" stroke-width="2.3"/>`);
+  o.push(`<polyline points="${E}" fill="none" stroke="#a5372c" stroke-width="2.3" stroke-dasharray="5 3"/>`);
+  $('cDiag').innerHTML=SVG(`${W} ${H}`,o.join(''),'Image pair count against velocity error by year');
+}
+
+/* ---------------- data loading ---------------- */
+
+/* The charts, tables and headline figures come from summary.js, which arrives
+   via a <script> tag and therefore always works. Only the map needs the large
+   GeoJSON files, and those must be fetched. Try the relative path first, then
+   the published site, so an isolated copy of this page still finds them. */
+const REMOTE = 'https://prazg.github.io/Nepal_Cryosphere_Inventory/';
+
+function loadJSON(name){
+  return fetch('data/'+name)
+    .then(r=>{ if(!r.ok) throw 0; return r.json(); })
+    .catch(()=> fetch(REMOTE+'data/'+name).then(r=>{
+      if(!r.ok) throw new Error(name); return r.json(); }));
+}
+
+function renderSummary(s){
+  const q=s.summary;
+  $('netpct').textContent=`+${q.lake_net_pct}%`;
+  $('insideN').textContent=q.lakes_inside_ice; $('insideN2').textContent=q.lakes_inside_ice;
+  $('insideA').textContent=q.lakes_inside_km2;
+  $('snrE').textContent=q.snr_early; $('snrL').textContent=q.snr_late;
+  $('gLegend').textContent=LEGENDS.v;
+  $('tSpd').innerHTML=s.spd.map(r=>`<tr><td>${r.l}</td><td class="n">${r.ca} <span class="sub2">n=${r.cn}</span></td><td class="n">${r.na} <span class="sub2">n=${r.nn}</span></td></tr>`).join('');
+  $('tProv').innerHTML=s.prov.map(r=>`<tr><td>${r.p||'unassigned'}</td><td class="n">${r.gn.toLocaleString()}</td><td class="n">${r.ga}</td><td class="n">${r.ln.toLocaleString()}</td><td class="n">${r.la}</td><td class="n">${r.gf||NA}</td></tr>`).join('');
+  drawHyps(s.ghyp,s.lhyp); drawContact(s.contact); drawDiag(s.diag);
+  // Sidebar totals, shown before the geometry arrives.
+  $('counts').innerHTML =
+    `<b>${q.glaciers.toLocaleString()}</b> glaciers &middot; ${q.glacier_km2.toFixed(0)} km&sup2;<br>`+
+    `<b>${q.lakes.toLocaleString()}</b> lakes &middot; ${q.lake_km2.toFixed(1)} km&sup2;<br>`+
+    `<b>${q.glof_events}</b> recorded floods`;
+}
+
+if (typeof window.SUMMARY !== 'undefined') {
+  renderSummary(window.SUMMARY);
+} else {
+  // summary.js missing: fall back to fetching the JSON.
+  loadJSON('summary.json').then(renderSummary).catch(()=>{
+    document.querySelectorAll('#cHyps,#cContact,#cDiag').forEach(el=>{
+      el.innerHTML='<p class="key">Chart data unavailable: <code>data/summary.js</code> did not load.</p>';});
+  });
+}
+
+if (MAP_OK) {
+  Promise.all(['glaciers.geojson','lakes.geojson','glof.geojson'].map(loadJSON))
+    .then(([g,l,f])=>{ DATA={glaciers:g,lakes:l,glof:f}; addLayers(); })
+    .catch(err=>{
+      $('map').innerHTML='<div class="mapfail"><h4>The map data could not be loaded</h4>'+
+        '<p>Could not read <code>data/'+(err&&err.message||'*.geojson')+'</code>, either next to this '+
+        'page or from the published site.</p>'+
+        '<p>The usual cause is opening <code>index.html</code> on its own, without the '+
+        '<code>data/</code> folder beside it, or straight from disk \u2014 browsers block '+
+        '<code>fetch</code> on <code>file://</code> URLs. Serve the folder instead:<br>'+
+        '<code>cd docs &amp;&amp; python -m http.server 8000</code></p>'+
+        '<p>Everything below is unaffected: the charts, tables and figures come from '+
+        '<code>summary.js</code> and do not need these files.</p></div>';
+      $('hint').style.display='none';
+      const side=document.querySelector('.side'); if(side) side.style.opacity='.45';
+      console.warn('Map geometry unavailable:', err);
+    });
+}
+</script>
+</body>
+</html>
