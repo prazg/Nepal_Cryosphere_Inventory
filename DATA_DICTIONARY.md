@@ -12,7 +12,9 @@ Three things to internalise before using any of this:
 
 ## `data/nepal_glacier_inventory.gpkg`, layer `glaciers` — 4,679 features, EPSG:4326
 
-Also published as `data/nepal_glacier_inventory.csv` (no geometry) and `data/nepal_glacier_inventory.parquet` (GeoParquet, identical content, roughly half the size). The GeoPackage also carries `glof_events` and `provinces` layers.
+The GeoPackage also carries `glof_events` and `provinces` layers. Run `make formats` for CSV and GeoParquet copies — they are derivatives and are not versioned, because storing all three formats tripled `data/` for no extra information.
+
+Coordinates are snapped to a 1e-5 degree grid, about 1.1 m. The outlines derive from 30 m imagery, so this is roughly thirty times finer than the source and lossless in any sense that matters; measured effect on total area is under 0.001%.
 
 | Field | Meaning |
 |---|---|
@@ -83,7 +85,7 @@ Also published as `data/nepal_glacier_inventory.csv` (no geometry) and `data/nep
 
 ## `data/nepal_glacial_lake_inventory.gpkg`, layer `lakes` — 1,429 features, EPSG:4326
 
-Also published as `data/nepal_glacial_lake_inventory.csv` and `.parquet`. The lake-terminating flags derived here are merged into the glacier layer above, so they are not duplicated in this file.
+The lake-terminating flags derived here are merged into the glacier layer above, so they are not duplicated in this file. Run `make formats` for CSV and GeoParquet copies.
 
 | Field | Meaning |
 |---|---|
@@ -123,7 +125,7 @@ Also published as `data/nepal_glacial_lake_inventory.csv` and `.parquet`. The la
 
 ---
 
-## `data/nepal_glacier_velocity_annual.csv.gz` — 172,905 rows
+## `data/nepal_glacier_velocity_annual.parquet` — 172,905 rows
 
 One row per glacier per year, 1987–2025.
 
@@ -140,7 +142,7 @@ One row per glacier per year, 1987–2025.
 
 2025 is a partial year: image-pair counts fall roughly five-fold and apparent speed jumps. It is excluded from the 2016–2024 epoch but present here.
 
-## `data/nepal_lake_area_annual_himag.csv` — 6,724 rows
+## `data/nepal_lake_area_annual_himag.parquet` — 6,724 rows
 
 One row per lake per year, 2008–2017, from Hi-MAG.
 

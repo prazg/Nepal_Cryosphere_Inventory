@@ -25,6 +25,7 @@ import numpy as np, pandas as pd, geopandas as gpd
 from shapely.geometry import box
 from .config import RAW, BUILD, OUT, AEA_NEPAL, GLOF_CSV, GLOF_ENCODING
 from .step3_export import drop_z
+from .formats import grid, vacuum
 
 # A lake is "glacial" for our purposes if within this distance of RGI 7.0 ice.
 # KV2026 used 12.5 km when building their zones of interest; we keep the same

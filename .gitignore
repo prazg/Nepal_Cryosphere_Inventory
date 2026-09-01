@@ -23,6 +23,16 @@ Thumbs.db
 # Local overrides
 .env
 
-# Uncomment if you would rather attach the GeoPackages to a Release than
-# version them (they are 20 MB and 26 MB). `make all` regenerates both.
+# Derived formats. The GeoPackage is the canonical copy; these regenerate
+# with `make formats` in a few seconds. Versioning them tripled data/.
+data/*.parquet
+!data/nepal_glacier_velocity_annual.parquet
+!data/nepal_lake_area_annual_himag.parquet
+data/nepal_glacier_inventory.csv
+data/nepal_glacial_lake_inventory.csv
+nepal-cryosphere-data-*.zip
+
+# Uncomment to keep the repository small and attach data/ to a Release
+# instead (`make release` builds the asset). The website does not read this
+# directory - it reads docs/data/ - so the site works either way.
 # data/*.gpkg

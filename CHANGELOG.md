@@ -31,8 +31,15 @@ First release.
   the lake-terminating flags live in the glacier file, where they belong.
 - All output geometry carried an all-zero Z dimension inherited from the RGI
   shapefiles, inflating every file by roughly a third.
-- Together these took `data/` from 51 MB to 44 MB with the largest single file
-  down from 27 MB to 15.2 MB, and added GeoParquet copies at half the size again.
+- The same two tables were versioned three times over as GeoPackage, GeoParquet
+  and CSV. Only the GeoPackage is kept; `make formats` regenerates the rest.
+- Province boundaries carried 141,198 vertices for seven context-only polygons,
+  simplified to 9,616 at 100 m.
+- Coordinates snapped to a 1e-5 degree (~1.1 m) grid, far finer than the 30 m
+  source imagery; total area changes by under 0.001%.
+- Time series moved from gzipped CSV to Parquet with narrowed dtypes, 4.4 -> 3.2 MB.
+- Together: `data/` fell from 51 MB to 25 MB, largest file 27 MB to 13.1 MB,
+  with no loss of records, fields or precision.
 
 ### Known limitations
 - RGI outlines date from a median of 1999 while lakes are 2022, so ice-contact

@@ -93,6 +93,8 @@ def build():
     # RGI shapefiles carry an all-zero Z dimension. Keeping it inflates every
     # output by roughly a third and conveys nothing, so drop it here.
     inv = drop_z(inv)
+    from .formats import grid, vacuum
+    inv = grid(inv)
 
     OUT.mkdir(parents=True, exist_ok=True)
     gpkg = OUT / "nepal_glacier_inventory.gpkg"
@@ -103,9 +105,20 @@ def build():
     gpd.read_file(BUILD / "step1_base.gpkg", layer="provinces").to_file(
         gpkg, layer="provinces", driver="GPKG")
 
-    flat = inv.drop(columns="geometry")
-    flat.to_csv(OUT / "nepal_glacier_inventory.csv", index=False)
-    ts.to_csv(OUT / "nepal_glacier_velocity_annual.csv", index=False)
+    vacuum(gpkg)
+
+    # Annual velocity: 172,905 rows. Parquet with narrowed dtypes is 3.2 MB
+    # against 4.4 MB gzipped CSV, and keeps the types on read.
+    ts = ts.copy()
+    ts["year"] = ts.year.astype("int16")
+    for c in ("n_valid_px", "n_px_total"):
+        ts[c] = ts[c].astype("int32")
+    for c in ("v_mean_m_yr", "v_max_m_yr", "v_error_m_yr", "img_pairs"):
+        if c in ts:
+            ts[c] = ts[c].astype("float32")
+    ts["rgi_id"] = ts.rgi_id.astype("category")
+    ts.to_parquet(OUT / "nepal_glacier_velocity_annual.parquet",
+                  compression="zstd", index=False)
 
     pd.Series(qc).to_json(BUILD / "qc.json", indent=1)
     inv.to_file(BUILD / "step3_inventory.gpkg", layer="glaciers", driver="GPKG")

@@ -93,15 +93,12 @@ Two things worth knowing about access. **The NSIDC path for RGI 7.0 returns HTTP
 │   ├── data/                simplified GeoJSON for the map (3.2 MB)
 │   │                        plus summary.js, which the page loads without fetch
 │   └── vendor/leaflet/      Leaflet, vendored (BSD-2-Clause)
-├── data/                    full-resolution outputs — use these for analysis
-│   ├── nepal_glacier_inventory.gpkg      15.2 MB  layers: glaciers, glof_events, provinces
-│   ├── nepal_glacial_lake_inventory.gpkg  9.3 MB  layer: lakes
-│   ├── nepal_glacier_inventory.parquet    8.1 MB  GeoParquet, same content
-│   ├── nepal_glacial_lake_inventory.parquet 4.3 MB
-│   ├── nepal_glacier_inventory.csv
-│   ├── nepal_glacial_lake_inventory.csv
-│   ├── nepal_glacier_velocity_annual.csv.gz
-│   └── nepal_lake_area_annual_himag.csv
+├── data/                    full-resolution outputs — 25 MB total
+│   ├── nepal_glacier_inventory.gpkg          13.1 MB  glaciers, glof_events, provinces
+│   ├── nepal_glacial_lake_inventory.gpkg      9.3 MB  lakes
+│   ├── nepal_glacier_velocity_annual.parquet  3.2 MB  172,905 glacier-years
+│   ├── nepal_lake_area_annual_himag.parquet   0.1 MB  6,724 lake-years
+│   └── source/                                HMAGLOFDB goes here
 ├── nepal_glaciers/          the pipeline
 │   ├── config.py            every verified endpoint and constant
 │   ├── step1_base.py        RGI 7.0 → Nepal base inventory
@@ -109,7 +106,6 @@ Two things worth knowing about access. **The NSIDC path for RGI 7.0 returns HTTP
 │   ├── step3_export.py      GLOF linkage, QC, glacier export
 │   ├── step4_lakes.py       lake inventory + lake-terminating flag
 │   └── step5_web.py         simplified web layers for docs/
-├── data/source/             HMAGLOFDB goes here (see its README)
 ├── .github/workflows/       Pages deploy + data-consistency checks
 ├── DATA_DICTIONARY.md       every field in every file
 ├── CONTRIBUTING.md
@@ -156,7 +152,13 @@ A second workflow, `validate.yml`, runs on every push and pull request. It does 
 
 **Two directories are called `data`, and the difference matters.** `docs/data/` (3.2 MB) is what the website reads — **it must be pushed or the map has nothing to draw.** `data/` at the repository root holds the full-resolution analysis files and the site never touches it. Omitting the root `data/` is a reasonable choice; omitting `docs/data/` breaks the map.
 
-**Before you push, check two things.** Every file is now under 25 MB, so GitHub's browser upload accepts them, but the browser uploader also has a cap on how many files you can add at once — for a repository this size, `git push` from the command line is far more reliable than drag-and-drop. Second, the map loads basemap tiles from Esri, OpenTopoMap and OpenStreetMap. These are third-party services with their own usage policies and no service guarantee to this project. For anything beyond light use, swap in your own tile source in `BASES` near the top of the `<script>` block in `docs/index.html`.
+**On size.** `data/` is 25 MB and the whole repository about 30 MB, which git handles without complaint. The largest single file is 13.1 MB, so GitHub's browser uploader would also accept it — but that uploader caps how many files you can add at once, and this is 40 files across nested directories, so `git push` from the command line is far more reliable.
+
+If you would rather keep the repository minimal, uncomment `data/*.gpkg` in `.gitignore` and run `make release` to bundle `data/` as a single Release asset. The repository then drops to about 5 MB. **The website is unaffected either way** — it reads `docs/data/`, never `data/`.
+
+Only one copy of each dataset is versioned, as GeoPackage. CSV and GeoParquet are derivatives; `make formats` regenerates both in seconds. Storing all three tripled `data/` for no information.
+
+**Before you push, check one more thing:** the map loads basemap tiles from Esri, OpenTopoMap and OpenStreetMap. These are third-party services with their own usage policies and no service guarantee to this project. For anything beyond light use, swap in your own tile source in `BASES` near the top of the `<script>` block in `docs/index.html`.
 
 Third, `data/source/` may contain a copy of HMAGLOFDB. **Confirm its redistribution terms before publishing.** The ESSD paper describing it is CC BY 4.0, but I have not verified that the same licence attaches to the database file as ICIMOD distributes it, and this is not a licensing opinion. If in doubt, add `data/source/*.csv` to `.gitignore`; `data/source/README.md` tells anyone cloning where to get it.
 
