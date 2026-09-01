@@ -26,6 +26,14 @@ First release.
 - **Any hazard or danger ranking.** The inputs required are not in these
   sources. See CONTRIBUTING.md.
 
+### Fixed before first push
+- The lake GeoPackage duplicated the entire glacier layer (~20 MB of redundancy);
+  the lake-terminating flags live in the glacier file, where they belong.
+- All output geometry carried an all-zero Z dimension inherited from the RGI
+  shapefiles, inflating every file by roughly a third.
+- Together these took `data/` from 51 MB to 44 MB with the largest single file
+  down from 27 MB to 15.2 MB, and added GeoParquet copies at half the size again.
+
 ### Known limitations
 - RGI outlines date from a median of 1999 while lakes are 2022, so ice-contact
   judgements overstate contact for retreating glaciers.

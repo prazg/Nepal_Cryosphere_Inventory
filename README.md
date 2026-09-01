@@ -94,8 +94,10 @@ Two things worth knowing about access. **The NSIDC path for RGI 7.0 returns HTTP
 │   │                        plus summary.js, which the page loads without fetch
 │   └── vendor/leaflet/      Leaflet, vendored (BSD-2-Clause)
 ├── data/                    full-resolution outputs — use these for analysis
-│   ├── nepal_glacier_inventory.gpkg
-│   ├── nepal_glacial_lake_inventory.gpkg
+│   ├── nepal_glacier_inventory.gpkg      15.2 MB  layers: glaciers, glof_events, provinces
+│   ├── nepal_glacial_lake_inventory.gpkg  9.3 MB  layer: lakes
+│   ├── nepal_glacier_inventory.parquet    8.1 MB  GeoParquet, same content
+│   ├── nepal_glacial_lake_inventory.parquet 4.3 MB
 │   ├── nepal_glacier_inventory.csv
 │   ├── nepal_glacial_lake_inventory.csv
 │   ├── nepal_glacier_velocity_annual.csv.gz
@@ -152,7 +154,9 @@ Then in the repository: **Settings → Pages → Source: GitHub Actions.** The i
 
 A second workflow, `validate.yml`, runs on every push and pull request. It does not rebuild the inventory — that needs about 1.6 GB of downloads — but it checks that the committed web layers agree with `summary.json`, that required attributes are present on every feature, that the dashboard JavaScript parses, and that every local asset `index.html` references actually exists. Those are the things that break in practice.
 
-**Before you push, check three things.** The repository is about 57 MB, well under GitHub's limits, but the two GeoPackages are 20 MB and 26 MB — under the 100 MB hard limit and the 50 MB warning threshold, though only just. If you would rather not version them, add `data/*.gpkg` to `.gitignore` and attach them to a GitHub Release instead; `make all` regenerates them either way. Second, the map loads basemap tiles from Esri, OpenTopoMap and OpenStreetMap. These are third-party services with their own usage policies and no service guarantee to this project. For anything beyond light use, swap in your own tile source in `BASES` near the top of the `<script>` block in `docs/index.html`.
+**Two directories are called `data`, and the difference matters.** `docs/data/` (3.2 MB) is what the website reads — **it must be pushed or the map has nothing to draw.** `data/` at the repository root holds the full-resolution analysis files and the site never touches it. Omitting the root `data/` is a reasonable choice; omitting `docs/data/` breaks the map.
+
+**Before you push, check two things.** Every file is now under 25 MB, so GitHub's browser upload accepts them, but the browser uploader also has a cap on how many files you can add at once — for a repository this size, `git push` from the command line is far more reliable than drag-and-drop. Second, the map loads basemap tiles from Esri, OpenTopoMap and OpenStreetMap. These are third-party services with their own usage policies and no service guarantee to this project. For anything beyond light use, swap in your own tile source in `BASES` near the top of the `<script>` block in `docs/index.html`.
 
 Third, `data/source/` may contain a copy of HMAGLOFDB. **Confirm its redistribution terms before publishing.** The ESSD paper describing it is CC BY 4.0, but I have not verified that the same licence attaches to the database file as ICIMOD distributes it, and this is not a licensing opinion. If in doubt, add `data/source/*.csv` to `.gitignore`; `data/source/README.md` tells anyone cloning where to get it.
 

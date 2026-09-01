@@ -12,7 +12,7 @@ Three things to internalise before using any of this:
 
 ## `data/nepal_glacier_inventory.gpkg`, layer `glaciers` — 4,679 features, EPSG:4326
 
-Also published as `data/nepal_glacier_inventory.csv` without geometry.
+Also published as `data/nepal_glacier_inventory.csv` (no geometry) and `data/nepal_glacier_inventory.parquet` (GeoParquet, identical content, roughly half the size). The GeoPackage also carries `glof_events` and `provinces` layers.
 
 | Field | Meaning |
 |---|---|
@@ -83,7 +83,7 @@ Also published as `data/nepal_glacier_inventory.csv` without geometry.
 
 ## `data/nepal_glacial_lake_inventory.gpkg`, layer `lakes` — 1,429 features, EPSG:4326
 
-Also published as `data/nepal_glacial_lake_inventory.csv`. The same GeoPackage carries `glaciers_with_lake_flags`, which is the glacier layer above.
+Also published as `data/nepal_glacial_lake_inventory.csv` and `.parquet`. The lake-terminating flags derived here are merged into the glacier layer above, so they are not duplicated in this file.
 
 | Field | Meaning |
 |---|---|
