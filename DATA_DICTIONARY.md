@@ -7,7 +7,8 @@ Three things to internalise before using any of this:
 1. **`term_type` is useless here.** RGI 7.0 sets it to 9 (unassigned) for every glacier in region 15. Use `has_contact_lake_1999_geom`.
 2. **`velocity_change_interpretable` is always False.** The 2000s velocities sit at the noise floor; any epoch comparison measures the decline in measurement error, not glacier dynamics.
 3. **`dist_to_rgi1999_m` is a distance to a ~1999 margin**, not to present-day ice. Contact is overstated for glaciers that have retreated.
-4. **`province` and `district` come from OpenStreetMap, the national outline from geoBoundaries.** These are independent datasets and disagree slightly along the border. A point inside Nepal but outside every OSM province is assigned its nearest province; a point outside Nepal is left null however close to the line it sits.
+4. **Use `ice_contact_2020`, not `dist_to_rgi1999_m`, to decide whether a lake touches ice.** The 1999 field is retained so the change is auditable, not because it is the better answer.
+5. **`province` and `district` come from OpenStreetMap, the national outline from geoBoundaries.** These are independent datasets and disagree slightly along the border. A point inside Nepal but outside every OSM province is assigned its nearest province; a point outside Nepal is left null however close to the line it sits.
 
 ---
 
@@ -80,6 +81,9 @@ Coordinates are snapped to a 1e-5 degree grid, about 1.1 m. The outlines derive 
 | `n_contact_lakes` | Number of lakes within 60 m of the mapped glacier margin. |
 | `contact_lake_km2` | Combined area of those lakes, km². |
 | `largest_contact_lake_km2` | Area of the largest, km². |
+| `has_contact_lake_2020` | True where a lake sits at the ICIMOD 2020 margin — 100 glaciers. **The current lake-terminating flag.** |
+| `n_contact_lakes_2020` | Number of such lakes. |
+| `contact_lake_2020_km2` | Their combined area, km². |
 | `has_contact_lake_1999_geom` | True where at least one lake sits at the mapped margin. **This is the lake-terminating flag RGI does not supply.** Judged against a ~1999 margin. |
 | `has_proglacial_lake_himag` | True where a margin lake is independently classified proglacial by Hi-MAG 2017. |
 
@@ -120,6 +124,13 @@ The lake-terminating flags derived here are merged into the glacier layer above,
 | `area_change_pct` | Percent change between periods. |
 | `change_usable` | True where area ≥ 0.01 km² in 2016–17 and ≥ 3 clear images in each period. |
 | `change_class` | expanding / shrinking / stable / not assessed. |
+| `dist_to_ice2020_m` | Distance to the nearest ICIMOD 2020 glacier margin, m. **The current answer.** |
+| `ice_contact_2020` | True where `dist_to_ice2020_m` ≤ 60 m. **Use this flag.** |
+| `ice_contact_1999` | True where `dist_to_rgi1999_m` ≤ 60 m. Kept for comparison. |
+| `lost_ice_contact_since_1999` | Touched the 1999 margin but not the 2020 one — 143 lakes. |
+| `nearest_glims_2020` | GLIMS id of the nearest 2020 glacier. |
+| `nearest_glacier_2020_km2` | Its area, km². |
+| `nearest_glacier_2020_zmin_m` | Its terminus elevation, m. |
 | `province` | Province containing the lake centroid, by point-in-polygon against OpenStreetMap `admin_level=4`. Null for the one lake whose centroid lies outside Nepal. |
 | `district` | District containing the lake centroid, OSM `admin_level=6`. Same null rule. |
 | `glof_events_recorded` | Recorded outburst floods in HMAGLOFDB v4 whose source lake lies within 3 km. |
@@ -206,3 +217,22 @@ Simplified geometry and abbreviated field names, for the map only. **Do not use 
 
 ### `summary.json`
 Precomputed aggregates for the dashboard charts: `summary` (headline figures), `ghyp` (glacier area by 50 m elevation band), `lhyp` (lake count and area by 100 m band), `diag` (image pairs and velocity error by year), `lann` (annual lake area 2008–2017), `contact` (expansion rate by distance to ice), `prov` (per-province totals), `spd` (size-matched speed comparison).
+
+
+---
+
+## `data/icimod_hkh_glaciers_2020_nepal.gpkg`, layer `glaciers_2020`
+
+ICIMOD's 2020 outlines clipped to Nepal: 4,232 features intersecting the border, 3,973 centred inside it. Source fields carried through unmodified.
+
+| Field | Meaning |
+|---|---|
+| `GLIMS_ID` | GLIMS identifier, encoding centroid coordinates |
+| `Mt_Range`, `M_Basin`, `Basin`, `Sub_Basin` | Mountain range and river basin hierarchy — 25 sub-basins in Nepal |
+| `Latitude`, `Longitude` | Representative point |
+| `Elv_min`, `Elv_mean`, `Elv_max` | Elevation from SRTM v4, m |
+| `Slope_min`, `Slope_mean`, `Slope_max`, `Aspect` | Topography, degrees |
+| `Area_SqKm` | Glacier area, km² |
+| `Thickness` | Modelled mean ice thickness, m |
+| `Reserve` | Modelled ice volume, km³ (area × thickness) |
+| `rep_point_in_nepal`, `area_km2_geom`, `area_km2_within_nepal` | Added by this build, as for the RGI layer |

@@ -41,6 +41,17 @@ First release.
 - Together: `data/` fell from 51 MB to 25 MB, largest file 27 MB to 13.1 MB,
   with no loss of records, fields or precision.
 
+### Added
+- ICIMOD 2020 glacier outlines for Nepal (doi:10.26066/rds.1973447, CC BY 4.0):
+  3,973 glaciers, 3,519 km², 280 km³ of modelled ice volume, published as
+  `data/icimod_hkh_glaciers_2020_nepal.gpkg` and as a toggleable map layer.
+- Lake ice contact recomputed against the 2020 margin: `dist_to_ice2020_m`,
+  `ice_contact_2020`, `lost_ice_contact_since_1999`. Contact falls from 260
+  lakes to 130; 143 lakes have been left behind by a retreating terminus.
+- The expansion signal sharpens under the correction, from 32.9% vs 8.9%
+  against 1999 margins to 46.4% vs 4.0% against 2020, and the gradient with
+  distance to ice becomes monotonic.
+
 ### Fixed
 - **Lake `province` was scrambled.** The projected copy of the lake frame was
   taken before a filter dropped 21 rows, so pairing it with the filtered frame

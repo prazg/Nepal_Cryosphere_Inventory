@@ -1,14 +1,15 @@
 .PHONY: all base velocity export lakes web formats serve release clean
-all: base velocity export lakes web
+all: base velocity export lakes icimod web
 
 base:      ; python -m nepal_glaciers.step1_base
 velocity:  ; python -m nepal_glaciers.step2_velocity
 export:    ; python -m nepal_glaciers.step3_export
 lakes:     ; python -m nepal_glaciers.step4_lakes
+icimod:    ; python -m nepal_glaciers.step6_icimod
 web:       ; python -m nepal_glaciers.step5_web
 
 # Refresh only the layers that actually change upstream.
-refresh: velocity export lakes web
+refresh: velocity export lakes icimod web
 
 # CSV and GeoParquet copies of the two inventories. Not versioned - the
 # GeoPackage is the canonical copy and these regenerate in seconds.

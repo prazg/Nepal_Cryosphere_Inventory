@@ -131,7 +131,8 @@ footer{padding:38px 0 64px;font-size:14px;color:#5c7079}
 
     <div class="grp">
       <h3>Layers</h3>
-      <label><input type="checkbox" id="lyrG" checked><span class="swm" style="background:#4a8ba0"></span> Glaciers</label>
+      <label><input type="checkbox" id="lyrG" checked><span class="swm" style="background:#4a8ba0"></span> Glaciers (RGI 7.0, ~1999)</label>
+      <label><input type="checkbox" id="lyrI"><span class="swm" style="background:#b9d4de;border:1px solid #4a8ba0"></span> ICIMOD outlines (2020)</label>
       <label><input type="checkbox" id="lyrL" checked><span class="swm" style="background:#2f6f8f"></span> Glacial lakes</label>
       <label><input type="checkbox" id="lyrF" checked><span class="dot" style="background:#c99230"></span> Recorded outburst floods</label>
     </div>
@@ -139,7 +140,7 @@ footer{padding:38px 0 64px;font-size:14px;color:#5c7079}
     <div class="grp">
       <h3>Colour glaciers by</h3>
       <label><input type="radio" name="gcol" value="v" checked> Surface speed, 2016&ndash;2024</label>
-      <label><input type="radio" name="gcol" value="lake"> Has a lake at its margin</label>
+      <label><input type="radio" name="gcol" value="lake"> Has a lake at its 2020 margin</label>
       <label><input type="radio" name="gcol" value="size"> Area</label>
       <p class="cap" id="gLegend"></p>
     </div>
@@ -204,11 +205,30 @@ footer{padding:38px 0 64px;font-size:14px;color:#5c7079}
 </div></section>
 
 <section><div class="wrap">
-  <h2>Twenty-three years of retreat, made visible</h2>
+  <h2>Retreat, measured rather than inferred</h2>
+  <p class="lede">RGI 7.0's Nepal outlines have a median source year of 1999. Adding ICIMOD's 2020 outlines for the same glaciers turns what was a caveat into a measurement: <strong id="c99"></strong> lakes touch the 1999 ice margin, but only <strong id="c20"></strong> touch the 2020 one. <strong id="clost"></strong> lakes have been left behind by a retreating terminus in between.</p>
+  <ul class="stats">
+    <li><span class="big" id="s99"></span><span class="lab">lakes at the 1999 margin</span></li>
+    <li><span class="big" id="s20"></span><span class="lab">at the 2020 margin</span></li>
+    <li><span class="big" id="sin"></span><span class="lab">once inside mapped ice, now beyond it</span></li>
+    <li><span class="big" id="sic"></span><span class="lab">km&sup2; mapped by ICIMOD in 2020</span></li>
+  </ul>
+  <p class="lede">The earlier version of this page inferred retreat from 216 lakes sitting inside polygons RGI still called glacier. With 2020 outlines that inference is replaced by a direct count: <span id="sin2"></span> of those lakes now lie outside the mapped ice entirely, a median of 234 m beyond it. The rest remain within the 2020 glacier and are genuine supraglacial or embayed lakes.</p>
+  <div class="flag" style="border-left-color:#2c7a4b;background:#eff5f1">
+    <h3 style="color:#2c7a4b">The correction sharpens the signal rather than blurring it</h3>
+    <p>Judged against the 1999 margin, 32.9% of ice-contact lakes were expanding against 8.9% of detached ones. Judged against 2020, it is <strong>46.4% against 4.0%</strong> at the far end, and the gradient with distance is now monotonic where before it flattened out.</p>
+    <p>That matters as evidence. A mapping artefact between two independently produced inventories would be expected to scatter lakes between the classes and wash the contrast out. Instead the contact group became markedly more distinct, which is what you would expect if the 1999 classification had been diluted by lakes whose glacier had already pulled away.</p>
+  </div>
+  <p class="key">Ice contact means within 60 m of the mapped margin, about two Sentinel-2 pixels. Both fields ship: <code>dist_to_rgi1999_m</code> and <code>dist_to_ice2020_m</code>, with <code>ice_contact_2020</code> as the flag to use.</p>
+</div></section>
+
+<section><div class="wrap">
+  <h2>What the two inventories cannot tell you</h2>
   <div class="flag">
-    <h3><span id="insideN"></span> lakes now lie inside outlines that RGI still maps as ice</h3>
-    <p>RGI 7.0's Nepal outlines come from imagery with a median date of 1999. The lakes are from 2022. So <span id="insideN2"></span> lakes &mdash; <span id="insideA"></span> km&sup2; of open water across 163 glaciers &mdash; fall <em>inside</em> polygons the glacier inventory still calls glacier. Hi-MAG independently classifies 98 of them as proglacial and only 16 as supraglacial, so these are overwhelmingly not ponds on the ice surface. They are lakes filling ground the terminus has vacated.</p>
-    <p>This cuts both ways. It is a real, measurable retreat signal. It also means every ice-contact judgement in this inventory is made against a 1999 margin and will <strong>overstate</strong> contact for glaciers that have since pulled back. The field is named <code>dist_to_rgi1999_m</code> so the gap cannot be forgotten downstream.</p>
+    <h3>Do not difference RGI and ICIMOD to get glacier change</h3>
+    <p>It is tempting: RGI maps 4,215 km&sup2; of ice in Nepal around 1999 and ICIMOD maps <span id="icarea"></span> km&sup2; in 2020, which looks like a 16.5% loss. Almost none of that gap is the differing minimum mapping area &mdash; only 1.1 km&sup2; of RGI's Nepal ice sits below ICIMOD's 0.02 km&sup2; threshold.</p>
+    <p>The problem is that the two disagree in <em>both</em> directions. 1,009 km&sup2; of RGI ice is absent from ICIMOD 2020, but 1,388 km&sup2; of ICIMOD ice is absent from RGI &mdash; more than the apparent loss itself. Different analysts, imagery, and treatment of debris-covered tongues and tributary splits all contribute, and none of it separates cleanly from real change. Only 76% of RGI's ice is mapped as ice by both.</p>
+    <p>A defensible change figure needs one methodology applied consistently. ICIMOD's publication contains exactly that &mdash; 1990, 2000, 2010 and 2020 layers from the same pipeline &mdash; but only the 2020 layer is included here. With the other three, this section becomes a real measurement.</p>
   </div>
 </div></section>
 
@@ -321,7 +341,7 @@ const CHANGE = {expanding:'#2c7a4b', stable:'#3d6b80', shrinking:'#a5372c', 'not
 const HIDDEN = {opacity:0, fillOpacity:0};
 
 const MAP_OK = (typeof L !== 'undefined');
-let map=null, baseLayer=null, gLayer=null, lLayer=null, fLayer=null, canvas=null;
+let map=null, baseLayer=null, gLayer=null, lLayer=null, fLayer=null, iLayer=null, canvas=null;
 let DATA={}, gCol='v', selG='', selL='';
 
 const $ = id => document.getElementById(id);
@@ -417,6 +437,12 @@ function addLayers(){
       if(l._hidden) return;
       L.DomEvent.stopPropagation(e); showLake(f.properties);})}).addTo(map);
 
+  if(DATA.icimod){
+    iLayer = L.geoJSON(DATA.icimod, {renderer:canvas,
+      style:{color:'#7fc0d4',weight:0.6,opacity:0.9,fillColor:'#b9d4de',fillOpacity:0.30},
+      interactive:false});
+  }
+
   fLayer = L.geoJSON(DATA.glof, {renderer:canvas,
     pointToLayer:(f,ll)=>L.circleMarker(ll,{radius:5,color:'#3a2a08',weight:1.1,
       fillColor:'#c99230',fillOpacity:0.95}),
@@ -424,6 +450,14 @@ function addLayers(){
       L.DomEvent.stopPropagation(e); showFlood(f.properties);})}).addTo(map);
 
   map.fitBounds(gLayer.getBounds(), {padding:[12,12]});
+  applyFilters();
+}
+
+function addIcimod(){
+  if(!MAP_OK || !DATA.icimod || iLayer) return;
+  iLayer = L.geoJSON(DATA.icimod, {renderer:canvas,
+    style:{color:'#7fc0d4',weight:0.6,opacity:0.9,fillColor:'#b9d4de',fillOpacity:0.30},
+    interactive:false});
   applyFilters();
 }
 
@@ -448,6 +482,10 @@ function applyFilters(){
   });
   if($('lyrF').checked){ if(!map.hasLayer(fLayer)) fLayer.addTo(map); }
   else if(map.hasLayer(fLayer)) map.removeLayer(fLayer);
+  if(iLayer){
+    if($('lyrI').checked){ if(!map.hasLayer(iLayer)){ iLayer.addTo(map); iLayer.bringToBack(); } }
+    else if(map.hasLayer(iLayer)) map.removeLayer(iLayer);
+  }
 }
 
 // Counts come from the same tests the map uses, so the sidebar can never
@@ -488,7 +526,7 @@ function showGlacier(p){
     (p.g_np<p.g_km2*0.99?row('Inside Nepal',`${p.g_np} km\u00b2`):'')+
     row('Elevation',`${p.zmin}\u2013${p.zmax} m`)+
     row('Speed 2016\u201324', p.vok===1?`${p.v} m/yr`:`${p.v??NA} <span style="color:#7e9aa4">(low S:N)</span>`)+
-    row('Margin lakes', p.nlk>0?p.nlk:'none found')+
+    row('Margin lakes (2020)', p.nlk>0?p.nlk:'none found')+
     row('Recorded floods', p.glof>0?p.glof:NA)+
     row('District', p.dist||NA)+
     row('Province', p.prov||NA)+
@@ -502,12 +540,14 @@ function showLake(p){
     row('Elevation',`${p.z} m`)+
     row('Type', p.typ==='unmatched'?'<span style="color:#7e9aa4">not matched</span>':p.typ)+
     row('Change 16\u201317\u219222\u201324', p.cls==='not assessed'?NA:`${p.chg>0?'+':''}${p.chg}% <span style="color:#7e9aa4">(${p.cls})</span>`)+
-    row('Distance to 1999 ice', p.d===0?'in contact':`${p.d.toLocaleString()} m`)+
+    row('To 2020 ice', p.d20===0?'in contact':`${p.d20.toLocaleString()} m`)+
+    row('To 1999 ice', p.d===0?'in contact':`${p.d.toLocaleString()} m`)+
+    (p.lost===1?row('Status','<span style="color:#c99230">lost contact since 1999</span>'):'')+
     row('Nearest glacier', p.gnm||'unnamed')+
     row('Recorded floods', p.glof>0?p.glof:NA)+
     row('District', p.dist_name||NA)+
     row('Province', p.prov||NA),
-    'Distance is measured to a glacier margin mapped around 1999, so contact is likely overstated for retreating glaciers.');
+    'Contact is judged against the 2020 margin. The 1999 figure is kept so the change is visible.');
 }
 function showFlood(p){
   hl('','');
@@ -524,7 +564,7 @@ $('infoClose').onclick=()=>{
 
 const LEGENDS={
   v:'Pale to dark: 0 to 25+ m/yr. Grey means the speed does not clear the quality filter.',
-  lake:'Amber: a lake sits at the mapped margin. Blue: none found.',
+  lake:'Amber: a lake sits at the 2020 ice margin. Blue: none found.',
   size:'Pale to dark: under 1 km\u00b2 up to 60+ km\u00b2.'
 };
 // Range sliders fire continuously while dragged. Restyling ~6,100 canvas paths
@@ -535,7 +575,7 @@ function scheduleFilters(){
   pending=true;
   requestAnimationFrame(()=>{ pending=false; applyFilters(); });
 }
-['lyrG','lyrL','lyrF','gArea','gNepal','gLakeOnly','gVok','lArea','lPro','lSupra','lUnc','lUnm','lExp']
+['lyrG','lyrL','lyrF','lyrI','gArea','gNepal','gLakeOnly','gVok','lArea','lPro','lSupra','lUnc','lUnm','lExp']
   .forEach(id=>$(id).addEventListener('input',scheduleFilters));
 document.querySelectorAll('input[name=gcol]').forEach(r=>r.addEventListener('change',e=>{
   gCol=e.target.value; $('gLegend').textContent=LEGENDS[gCol];
@@ -543,7 +583,7 @@ document.querySelectorAll('input[name=gcol]').forEach(r=>r.addEventListener('cha
 }));
 $('reset').onclick=()=>{
   ['lyrG','lyrL','lyrF','gNepal','lPro','lSupra','lUnc','lUnm'].forEach(i=>$(i).checked=true);
-  ['gLakeOnly','gVok','lExp'].forEach(i=>$(i).checked=false);
+  ['lyrI','gLakeOnly','gVok','lExp'].forEach(i=>$(i).checked=false);
   $('gArea').value=0; $('lArea').value=0;
   document.querySelector('input[name=gcol][value=v]').checked=true;
   gCol='v'; $('gLegend').textContent=LEGENDS.v;
@@ -608,8 +648,12 @@ function loadJSON(name){
 function renderSummary(s){
   const q=s.summary;
   $('netpct').textContent=`+${q.lake_net_pct}%`;
-  $('insideN').textContent=q.lakes_inside_ice; $('insideN2').textContent=q.lakes_inside_ice;
-  $('insideA').textContent=q.lakes_inside_km2;
+  ['c99','s99'].forEach(i=>$(i).textContent=q.contact_1999);
+  ['c20','s20'].forEach(i=>$(i).textContent=q.contact_2020);
+  $('clost').textContent=q.lost_contact;
+  ['sin','sin2'].forEach(i=>$(i).textContent=q.inside99_now_outside);
+  $('sic').textContent=q.icimod_km2.toLocaleString();
+  $('icarea').textContent=q.icimod_km2.toLocaleString();
   $('snrE').textContent=q.snr_early; $('snrL').textContent=q.snr_late;
   $('gLegend').textContent=LEGENDS.v;
   $('tSpd').innerHTML=s.spd.map(r=>`<tr><td>${r.l}</td><td class="n">${r.ca} <span class="sub2">n=${r.cn}</span></td><td class="n">${r.na} <span class="sub2">n=${r.nn}</span></td></tr>`).join('');
@@ -635,7 +679,15 @@ if (typeof window.SUMMARY !== 'undefined') {
 
 if (MAP_OK) {
   Promise.all(['glaciers.geojson','lakes.geojson','glof.geojson'].map(loadJSON))
-    .then(([g,l,f])=>{ DATA={glaciers:g,lakes:l,glof:f}; addLayers(); })
+    .then(([g,l,f])=>{
+      DATA={glaciers:g,lakes:l,glof:f};
+      addLayers();
+      // ICIMOD outlines are an optional extra layer: if they fail to load the
+      // rest of the map is unaffected, so they are fetched separately.
+      loadJSON('icimod2020.geojson')
+        .then(i=>{ DATA.icimod=i; addIcimod(); })
+        .catch(()=>{ $('lyrI').disabled=true; });
+    })
     .catch(err=>{
       $('map').innerHTML='<div class="mapfail"><h4>The map data could not be loaded</h4>'+
         '<p>Could not read <code>data/'+(err&&err.message||'*.geojson')+'</code>, either next to this '+
