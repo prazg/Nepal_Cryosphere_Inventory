@@ -4,8 +4,6 @@ An open, rebuildable inventory of **4,480 glaciers** (4,215 km² of ice) and **1
 
 **[→ Open the interactive map](https://prazg.github.io/Nepal_Cryosphere_Inventory/)**
 
-The link goes live once Pages is enabled — see [Deploying](#deploying).
-
 ---
 
 ## What this adds to the source data
@@ -82,8 +80,6 @@ Speed is `hypot(vx, vy)`, so it cannot go below zero and random error biases it 
 
 Two things worth knowing about access. **The NSIDC path for RGI 7.0 returns HTTP 401 without Earthdata credentials**, so the pipeline pulls the identical release archives from the RGI/OGGM mirror at Universität Bremen; NSIDC-0770 remains the citation. And **the ITS_LIVE v2/v2.1 regional velocity mosaics do not exist for RGI region 15** — they cover regions 01–12, 14 and 17–19 only. Nepal is almost entirely region 15, so this build uses the per-tile annual composites, which do cover it. Both traps are documented in `nepal_glaciers/config.py`.
 
-**ICIMOD is the obvious missing source.** Their 2015 glacial lakes for the Koshi, Gandaki and Karnali basins (DOI 10.26066/RDS.1971946) would be the authoritative Nepal-specific inventory. Their GeoNetwork API exposes only images publicly; the shapefile sits behind a download flow this pipeline cannot complete. If you can obtain it, substituting it in is the single highest-value improvement to this repository.
-
 ## Repository layout
 
 ```
@@ -138,46 +134,6 @@ To pick up new ITS_LIVE years or a new HMAGLOFDB release without refetching RGI:
 ```bash
 make refresh      # velocity → export → lakes → web
 ```
-
-## Deploying
-
-The site is static — nothing is compiled. A helper prepares the repository and then hands control back to you:
-
-```bash
-./setup-github.sh prazg Nepal_Cryosphere_Inventory
-```
-
-Links throughout this repository already point at `prazg/Nepal_Cryosphere_Inventory`, so the script's substitution step is a no-op here; it still warns about oversized files, runs `git init`, stages everything, and stops. It does not push: that needs your credentials, and those should not go through a script you did not write. It prints the three commands to run yourself.
-
-Then in the repository: **Settings → Pages → Source: GitHub Actions.** The included `deploy-pages.yml` workflow publishes `docs/` on every push that touches it. If you would rather avoid Actions, delete that workflow and choose **Deploy from a branch → `main` → `/docs`** instead; both work, and `.nojekyll` is already in place so Jekyll leaves the data directory alone.
-
-A second workflow, `validate.yml`, runs on every push and pull request. It does not rebuild the inventory — that needs about 1.6 GB of downloads — but it checks that the committed web layers agree with `summary.json`, that required attributes are present on every feature, that the dashboard JavaScript parses, and that every local asset `index.html` references actually exists. Those are the things that break in practice.
-
-**Two directories are called `data`, and the difference matters.** `docs/data/` (3.2 MB) is what the website reads — **it must be pushed or the map has nothing to draw.** `data/` at the repository root holds the full-resolution analysis files and the site never touches it. Omitting the root `data/` is a reasonable choice; omitting `docs/data/` breaks the map.
-
-**On size.** `data/` is 25 MB and the whole repository about 30 MB, which git handles without complaint. The largest single file is 13.1 MB, so GitHub's browser uploader would also accept it — but that uploader caps how many files you can add at once, and this is 40 files across nested directories, so `git push` from the command line is far more reliable.
-
-If you would rather keep the repository minimal, uncomment `data/*.gpkg` in `.gitignore` and run `make release` to bundle `data/` as a single Release asset. The repository then drops to about 5 MB. **The website is unaffected either way** — it reads `docs/data/`, never `data/`.
-
-Only one copy of each dataset is versioned, as GeoPackage. CSV and GeoParquet are derivatives; `make formats` regenerates both in seconds. Storing all three tripled `data/` for no information.
-
-**Before you push, check one more thing:** the map loads basemap tiles from Esri, OpenTopoMap and OpenStreetMap. These are third-party services with their own usage policies and no service guarantee to this project. For anything beyond light use, swap in your own tile source in `BASES` near the top of the `<script>` block in `docs/index.html`.
-
-Third, `data/source/` may contain a copy of HMAGLOFDB. **Confirm its redistribution terms before publishing.** The ESSD paper describing it is CC BY 4.0, but I have not verified that the same licence attaches to the database file as ICIMOD distributes it, and this is not a licensing opinion. If in doubt, add `data/source/*.csv` to `.gitignore`; `data/source/README.md` tells anyone cloning where to get it.
-
-To preview locally before pushing:
-
-```bash
-make serve        # then open http://localhost:8000
-```
-
-**Opening `docs/index.html` on its own will not show the map.** The GeoJSON layers have to be fetched, and browsers block `fetch` on `file://` URLs; the same applies inside document previews that isolate a single file. The page detects this and says so in the map area. The charts, tables and headline figures are unaffected — they come from `data/summary.js`, which loads through a `<script>` tag and is not subject to those restrictions. If the geometry cannot be found locally the page also tries the published site before giving up, so a stray copy of `index.html` still works once Pages is live.
-
-**On the map library.** The map uses **Leaflet**, vendored into `docs/vendor/leaflet/`, deliberately rather than a WebGL library. WebGL map libraries such as MapLibre GL spawn a Web Worker from a `blob:` URL, and several sandboxed environments — including some in-app document previews — refuse that with `SecurityError: Failed to construct 'Worker'`. Leaflet uses no workers, so the map runs anywhere the page itself runs. It is also 145 KB against 803 KB.
-
-Vendoring means no CDN dependency: the map works offline and under a strict content-security policy. If the local copy is missing the page falls back to unpkg then jsDelivr. If all sources fail, the map area explains why and **the rest of the page still works** — the charts, tables and figures come from `data/summary.json` and never touch the map.
-
-Glaciers and lakes are drawn with Leaflet's canvas renderer; SVG cannot handle 6,100 polygons. Filtering restyles paths in place rather than rebuilding layers, and slider events are coalesced to one pass per animation frame.
 
 ## Field reference
 
