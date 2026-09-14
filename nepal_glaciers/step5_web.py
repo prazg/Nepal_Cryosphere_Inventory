@@ -55,9 +55,10 @@ def build():
         glof=gl.glof_events_recorded.astype(int),
         zmin=gl.zmin_m.round(0), zmax=gl.zmax_m.round(0),
         npl=gl.rep_point_in_nepal.astype(int), nm=gl.glac_name.fillna(""),
-        prov=gl.province.fillna(""), yr=gl.src_year.fillna(0).astype(int))
+        prov=gl.province.fillna(""), dist=gl.district.fillna(""),
+        yr=gl.src_year.fillna(0).astype(int))
     s1 = _write(g, ["rgi_id", "nm", "g_km2", "g_np", "v", "vok", "lake", "nlk",
-                    "glof", "zmin", "zmax", "npl", "prov", "yr"],
+                    "glof", "zmin", "zmax", "npl", "prov", "dist", "yr"],
                 GLACIER_TOL_M, WEB / "glaciers.geojson", 4)
 
     l = lk.assign(
@@ -65,9 +66,10 @@ def build():
         typ=lk.lake_type_himag2017.fillna("unmatched"), d=lk.dist_to_rgi1999_m.round(0),
         chg=lk.area_change_pct.round(1), cls=lk.change_class,
         glof=lk.glof_events_recorded.astype(int), prov=lk.province.fillna(""),
-        gnm=lk.nearest_glacier_name.fillna(""), rgi=lk.nearest_rgi_id.fillna(""))
+        gnm=lk.nearest_glacier_name.fillna(""), rgi=lk.nearest_rgi_id.fillna(""),
+        dist_name=lk.district.fillna(""))
     s2 = _write(l, ["lake_id", "l_km2", "z", "typ", "d", "chg", "cls", "glof",
-                    "prov", "gnm", "rgi"],
+                    "prov", "dist_name", "gnm", "rgi"],
                 LAKE_TOL_M, WEB / "lakes.geojson", 5)
 
     # --- GLOF points -------------------------------------------------------

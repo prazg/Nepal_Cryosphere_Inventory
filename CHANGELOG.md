@@ -41,6 +41,19 @@ First release.
 - Together: `data/` fell from 51 MB to 25 MB, largest file 27 MB to 13.1 MB,
   with no loss of records, fields or precision.
 
+### Fixed
+- **Lake `province` was scrambled.** The projected copy of the lake frame was
+  taken before a filter dropped 21 rows, so pairing it with the filtered frame
+  aligned each surviving lake to a different lake's centroid — every lake after
+  the first drop carried the wrong province. Province totals stayed plausible,
+  which is what made it hard to spot. Glaciers were unaffected.
+- Province and district are now computed by point-in-polygon against
+  OpenStreetMap (`admin_level` 4 and 6), replacing geoBoundaries ADM1, and
+  `district` is new. Names follow current OSM usage, so "Province 1" is now
+  "Koshi Province".
+- The spatial join aligns on the index rather than by position, so a point
+  landing on a shared boundary can no longer shift every later value.
+
 ### Known limitations
 - RGI outlines date from a median of 1999 while lakes are 2022, so ice-contact
   judgements overstate contact for retreating glaciers.

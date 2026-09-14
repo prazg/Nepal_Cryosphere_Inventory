@@ -3,6 +3,7 @@ import zipfile, io, sys
 import numpy as np, pandas as pd, geopandas as gpd, requests
 from shapely.geometry import box
 from .config import (RAW, BUILD, RGI_MIRROR, RGI_REGIONS, BOUNDARIES, AEA_NEPAL)
+from . import osm_admin
 
 
 def fetch(url, dest, timeout=900):
@@ -32,8 +33,7 @@ def build():
     fetch_inputs()
     npl = gpd.read_file(RAW / "npl_adm0.geojson").to_crs(4326)
     npl_u = npl.union_all()
-    prov = gpd.read_file(RAW / "npl_adm1.geojson").to_crs(4326)[["shapeName", "geometry"]]
-    prov = prov.rename(columns={"shapeName": "province"})
+    osm_prov, osm_dist = osm_admin.build()
 
     minx, miny, maxx, maxy = npl_u.bounds
     bbox = box(minx - .3, miny - .3, maxx + .3, maxy + .3)
@@ -67,11 +67,14 @@ def build():
                                 sel.area_km2_glacier_total).clip(0, 1)
     sel["is_transboundary"] = sel.frac_within_nepal < 0.99
 
-    # Province of the representative point (may be NA for transboundary ice).
-    rp = gpd.GeoDataFrame(sel[["rgi_id"]],
-                          geometry=gpd.points_from_xy(sel.cenlon, sel.cenlat), crs=4326)
-    sel["province"] = gpd.sjoin(rp, prov, how="left",
-                                predicate="within")["province"].values
+    # Province and district of the representative point, by point-in-polygon
+    # against OSM. assign() joins on the index, never by position: a spatial
+    # join can return more rows than it was given when a point lands on a
+    # boundary, and assigning those positionally shifts every later value.
+    rp = gpd.GeoSeries(gpd.points_from_xy(sel.cenlon, sel.cenlat),
+                       crs=4326, index=sel.index)
+    sel["province"], sel["district"] = osm_admin.assign(
+        rp, osm_prov, osm_dist, in_country=sel.rep_point_in_nepal)
 
     # Hypsometry-derived debris-free proxy metrics.
     hyp = pd.concat(hyps, ignore_index=True)
@@ -91,7 +94,8 @@ def build():
 
     out = BUILD / "step1_base.gpkg"
     sel.to_file(out, layer="glaciers", driver="GPKG")
-    prov.to_file(out, layer="provinces", driver="GPKG")
+    osm_prov.to_file(out, layer="provinces", driver="GPKG")
+    osm_dist.to_file(out, layer="districts", driver="GPKG")
     print(f"  -> {len(sel):,} glaciers | "
           f"{sel.area_km2_within_nepal.sum():,.1f} km2 inside Nepal | "
           f"{int(sel.is_transboundary.sum())} transboundary")

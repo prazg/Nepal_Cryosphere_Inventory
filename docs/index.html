@@ -235,7 +235,12 @@ footer{padding:38px 0 64px;font-size:14px;color:#5c7079}
 <section><div class="wrap">
   <h2>By province</h2>
   <table><thead><tr><th>Province</th><th class="n">Glaciers</th><th class="n">Ice km&sup2;</th><th class="n">Lakes</th><th class="n">Lake km&sup2;</th><th class="n">Floods</th></tr></thead><tbody id="tProv"></tbody></table>
-  <p class="key">Assigned from the representative point of each glacier and the centroid of each lake. Recorded floods are HMAGLOFDB v4 events matched to a lake within 3 km.</p>
+  <p class="key">Assigned by point-in-polygon against OpenStreetMap administrative boundaries — the representative point of each glacier, the centroid of each lake. Recorded floods are HMAGLOFDB v4 events matched to a lake within 3 km. Province totals cover the 4,480 glaciers centred in Nepal; the 190 whose centre falls outside the border are unassigned by design.</p>
+
+  <h2 style="margin-top:38px">By district</h2>
+  <p class="lede">Nepal's ice is concentrated in a handful of the 77 districts. Manang, Taplejung, Solukhumbu and Dolpa alone hold about 40% of it.</p>
+  <table><thead><tr><th>District</th><th class="n">Glaciers</th><th class="n">Ice km&sup2;</th><th class="n">Lakes</th><th class="n">Lake km&sup2;</th></tr></thead><tbody id="tDist"></tbody></table>
+  <p class="key">Fifteen districts with the most ice, of 24 that hold any.</p>
 </div></section>
 
 <section><div class="wrap">
@@ -273,7 +278,7 @@ footer{padding:38px 0 64px;font-size:14px;color:#5c7079}
 </div></section>
 
 <footer><div class="wrap">
-  <p>Built from RGI Consortium (2023) NSIDC-0770; ITS_LIVE (NASA MEaSUREs); Kumar &amp; Vijay (2026) Zenodo 17948783; Chen et al. (2021) Zenodo 4275164; Shrestha et al. (2023) HMAGLOFDB; geoBoundaries gbOpen. None of these endorses this build. Basemaps &copy; Esri and contributors, &copy; OpenTopoMap and OpenStreetMap contributors.</p>
+  <p>Built from RGI Consortium (2023) NSIDC-0770; ITS_LIVE (NASA MEaSUREs); Kumar &amp; Vijay (2026) Zenodo 17948783; Chen et al. (2021) Zenodo 4275164; Shrestha et al. (2023) HMAGLOFDB; geoBoundaries gbOpen. None of these endorses this build. Administrative boundaries &copy; OpenStreetMap contributors, ODbL. Basemaps &copy; Esri and contributors, &copy; OpenTopoMap and OpenStreetMap contributors.</p>
 </div></footer>
 
 <!-- Headline figures and chart series. Loaded as a script rather than fetched,
@@ -485,6 +490,7 @@ function showGlacier(p){
     row('Speed 2016\u201324', p.vok===1?`${p.v} m/yr`:`${p.v??NA} <span style="color:#7e9aa4">(low S:N)</span>`)+
     row('Margin lakes', p.nlk>0?p.nlk:'none found')+
     row('Recorded floods', p.glof>0?p.glof:NA)+
+    row('District', p.dist||NA)+
     row('Province', p.prov||NA)+
     row('Outline year', p.yr||NA),
     'Outline dates from RGI 7.0 source imagery, not today. Speed is a glacier-wide mean.');
@@ -499,6 +505,7 @@ function showLake(p){
     row('Distance to 1999 ice', p.d===0?'in contact':`${p.d.toLocaleString()} m`)+
     row('Nearest glacier', p.gnm||'unnamed')+
     row('Recorded floods', p.glof>0?p.glof:NA)+
+    row('District', p.dist_name||NA)+
     row('Province', p.prov||NA),
     'Distance is measured to a glacier margin mapped around 1999, so contact is likely overstated for retreating glaciers.');
 }
@@ -607,6 +614,7 @@ function renderSummary(s){
   $('gLegend').textContent=LEGENDS.v;
   $('tSpd').innerHTML=s.spd.map(r=>`<tr><td>${r.l}</td><td class="n">${r.ca} <span class="sub2">n=${r.cn}</span></td><td class="n">${r.na} <span class="sub2">n=${r.nn}</span></td></tr>`).join('');
   $('tProv').innerHTML=s.prov.map(r=>`<tr><td>${r.p||'unassigned'}</td><td class="n">${r.gn.toLocaleString()}</td><td class="n">${r.ga}</td><td class="n">${r.ln.toLocaleString()}</td><td class="n">${r.la}</td><td class="n">${r.gf||NA}</td></tr>`).join('');
+  if(s.dist) $('tDist').innerHTML=s.dist.map(r=>`<tr><td>${r.d||'unassigned'}</td><td class="n">${r.gn.toLocaleString()}</td><td class="n">${r.ga}</td><td class="n">${r.ln.toLocaleString()}</td><td class="n">${r.la}</td></tr>`).join('');
   drawHyps(s.ghyp,s.lhyp); drawContact(s.contact); drawDiag(s.diag);
   // Sidebar totals, shown before the geometry arrives.
   $('counts').innerHTML =

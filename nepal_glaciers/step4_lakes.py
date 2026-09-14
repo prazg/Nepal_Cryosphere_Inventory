@@ -26,6 +26,7 @@ from shapely.geometry import box
 from .config import RAW, BUILD, OUT, AEA_NEPAL, GLOF_CSV, GLOF_ENCODING
 from .step3_export import drop_z
 from .formats import grid, vacuum
+from . import osm_admin
 
 # A lake is "glacial" for our purposes if within this distance of RGI 7.0 ice.
 # KV2026 used 12.5 km when building their zones of interest; we keep the same
@@ -38,8 +39,8 @@ GLOF_MATCH_M = 3000.0
 
 def _nepal():
     npl = gpd.read_file(RAW / "npl_adm0.geojson").to_crs(4326)
-    prov = gpd.read_file(RAW / "npl_adm1.geojson").to_crs(4326)[["shapeName", "geometry"]]
-    return npl.union_all(), prov.rename(columns={"shapeName": "province"})
+    osm_prov, osm_dist = osm_admin.build()
+    return npl.union_all(), osm_prov, osm_dist
 
 
 def _load_kv(stem, npl_u, area_col="Area"):
@@ -67,7 +68,7 @@ def _himag_nepal(npl_u):
 
 
 def build():
-    npl_u, prov = _nepal()
+    npl_u, osm_prov, osm_dist = _nepal()
     gl = gpd.read_file(BUILD / "step3_inventory.gpkg", layer="glaciers")
 
     # ---- current lake layer (KV2026, 2022) --------------------------------
@@ -165,10 +166,13 @@ def build():
                           np.where(lk.area_change_km2 > 0.005, "expanding",
                           np.where(lk.area_change_km2 < -0.005, "shrinking", "stable")))
 
-    # ---- province and GLOF ------------------------------------------------
-    cpt = gpd.GeoDataFrame(lk[["lake_id"]],
-                           geometry=lk_ea.centroid.to_crs(4326), crs=4326)
-    lk["province"] = gpd.sjoin(cpt, prov, how="left", predicate="within")["province"].values
+    # ---- province, district and GLOF --------------------------------------
+    # Recompute the centroid from the CURRENT geometry. lk_ea was projected
+    # before the 12.5 km buffer filter dropped rows, so reusing it here paired
+    # each surviving lake with a different lake's centroid.
+    cpt = lk.to_crs(ea).centroid.to_crs(4326)
+    lk["province"], lk["district"] = osm_admin.assign(
+        cpt, osm_prov, osm_dist, in_country=lk.centroid_in_nepal)
 
     glof = pd.read_csv(GLOF_CSV, encoding=GLOF_ENCODING, low_memory=False)
     glof = glof[glof.Country.astype(str).str.contains("Nepal", case=False, na=False)].copy()

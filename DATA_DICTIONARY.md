@@ -7,6 +7,7 @@ Three things to internalise before using any of this:
 1. **`term_type` is useless here.** RGI 7.0 sets it to 9 (unassigned) for every glacier in region 15. Use `has_contact_lake_1999_geom`.
 2. **`velocity_change_interpretable` is always False.** The 2000s velocities sit at the noise floor; any epoch comparison measures the decline in measurement error, not glacier dynamics.
 3. **`dist_to_rgi1999_m` is a distance to a ~1999 margin**, not to present-day ice. Contact is overstated for glaciers that have retreated.
+4. **`province` and `district` come from OpenStreetMap, the national outline from geoBoundaries.** These are independent datasets and disagree slightly along the border. A point inside Nepal but outside every OSM province is assigned its nearest province; a point outside Nepal is left null however close to the line it sits.
 
 ---
 
@@ -51,7 +52,8 @@ Coordinates are snapped to a 1e-5 degree grid, about 1.1 m. The outlines derive 
 | `area_km2_within_nepal` | Portion of the glacier inside the Nepal ADM0 boundary, km². |
 | `frac_within_nepal` | area_km2_within_nepal ÷ area_km2_glacier_total. |
 | `is_transboundary` | True where frac_within_nepal < 0.99. |
-| `province` | Nepal ADM1 province of the representative point. |
+| `province` | Province containing the representative point, by point-in-polygon against OpenStreetMap `admin_level=4`. Null where the point falls outside Nepal (190 transboundary glaciers). |
+| `district` | District containing the representative point, OSM `admin_level=6`. Same null rule. |
 | `z_hyps_median_m` | Median elevation recomputed independently from the RGI hypsometry table, m. |
 | `frac_area_below_5000m` | Fraction of glacier area below 5000 m. |
 | `src_year` | Year of src_date. Median 1999 across Nepal. |
@@ -118,7 +120,8 @@ The lake-terminating flags derived here are merged into the glacier layer above,
 | `area_change_pct` | Percent change between periods. |
 | `change_usable` | True where area ≥ 0.01 km² in 2016–17 and ≥ 3 clear images in each period. |
 | `change_class` | expanding / shrinking / stable / not assessed. |
-| `province` | Nepal ADM1 province of the lake centroid. |
+| `province` | Province containing the lake centroid, by point-in-polygon against OpenStreetMap `admin_level=4`. Null for the one lake whose centroid lies outside Nepal. |
+| `district` | District containing the lake centroid, OSM `admin_level=6`. Same null rule. |
 | `glof_events_recorded` | Recorded outburst floods in HMAGLOFDB v4 whose source lake lies within 3 km. |
 | `glof_year_last` | Year of the most recent such event. |
 | `size_class` | Area bin, km². |
@@ -173,7 +176,8 @@ Simplified geometry and abbreviated field names, for the map only. **Do not use 
 | `zmin` | Terminus elevation, m |
 | `zmax` | Maximum elevation, m |
 | `npl` | 1 where the representative point is inside Nepal |
-| `prov` | Province |
+| `prov` | Province (OSM) |
+| `dist` | District (OSM) |
 | `yr` | Outline source year |
 
 ### `lakes.geojson`
@@ -187,7 +191,8 @@ Simplified geometry and abbreviated field names, for the map only. **Do not use 
 | `chg` | Percent area change 2016–17 → 2022–24 |
 | `cls` | expanding / stable / shrinking / not assessed |
 | `glof` | Recorded outburst floods within 3 km |
-| `prov` | Province |
+| `prov` | Province (OSM) |
+| `dist` | District (OSM) |
 | `gnm` | Nearest glacier name |
 | `rgi` | Nearest glacier RGI id |
 
