@@ -147,3 +147,5 @@ Cite this inventory *and*, separately, every upstream dataset. See `CITATION.cff
 ## Licence
 
 Code and derived data CC BY 4.0. Upstream sources keep their own terms — see `LICENSE`.
+
+Compiled and built by Prajwal Ghimire
